@@ -10,7 +10,7 @@ fi
 ENGINE_NAME=$1
 shift
 
-bundle exec rails plugin new engines/$ENGINE_NAME --mountable --skip-git "$@"
+bundle exec rails plugin new engines/$ENGINE_NAME --skip-git "$@"
 
 # Remove the tasks directory in the engine's lib directory
 TASKS_DIR="engines/$ENGINE_NAME/lib/tasks"
@@ -64,7 +64,4 @@ if [ -f "$ENGINE_RUBOCOP_FILE" ]; then
   rm "$ENGINE_RUBOCOP_FILE"
 fi
 
-cd engines/$ENGINE_NAME
-bundle add rspec --group="development, test"
-bundle exec rspec --init
-cd - > /dev/null
+# No per-engine Gemfile, so skip RSpec setup in the engine
