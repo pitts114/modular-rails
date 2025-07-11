@@ -1,0 +1,19 @@
+# Kafka configuration for local development
+
+defaults: &defaults
+  brokers:
+    - localhost:9092
+  client_id: rails_kafka_demo
+  topic_prefix: rails_kafka_demo_
+
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults
+
+production:
+  brokers:
+    - <%= ENV.fetch('KAFKA_BROKERS', 'localhost:9092') %>
+  client_id: rails_kafka_demo
+  topic_prefix: rails_kafka_demo_

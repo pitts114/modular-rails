@@ -1,0 +1,3 @@
+start by making a user engine and a notifications engine that sends a demo welcome email, maybe
+a ui (for user creation) and admin (for viewing notifications engine info) engines too to see stuff.
+Use active notifications
