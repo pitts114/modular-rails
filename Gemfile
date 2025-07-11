@@ -120,5 +120,3 @@ end
 engine_dependencies.each do |engine|
   gem engine, path: "engines/#{engine}", require: true
 end
-
-gem "users", path: "engines/users"
