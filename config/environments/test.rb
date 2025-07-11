@@ -50,4 +50,7 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # FactoryBot
+  config.factory_bot.definition_file_paths = Dir.glob(Rails.root.join("engines/**/spec/factories")).map(&:to_s)
 end
