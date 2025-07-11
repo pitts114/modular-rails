@@ -112,9 +112,13 @@ end
 # Scan all engines and add them and their dependencies to the global group
 Dir.glob(File.expand_path("engines/*", __dir__)).each do |path|
   engine = File.basename(path)
+  gemspec_file = File.join(path, "#{engine}.gemspec")
+  next unless File.exist?(gemspec_file)
   scan_for_engine_dependencies(engine, engine_dependencies, circular_stack)
 end
 
 engine_dependencies.each do |engine|
   gem engine, path: "engines/#{engine}", require: true
 end
+
+gem "users", path: "engines/users"
