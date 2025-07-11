@@ -2,8 +2,9 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   scan_ruby:
@@ -19,8 +20,25 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
+      - name: Install Bundler
+        run: gem install bundler
+
+      - name: Print Ruby and Bundler environment info
+        run: |
+          ruby -v
+          gem env
+          bundle env
+
       - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
+        run: |
+          set -e
+          bundle install
+          for engine in engines/*; do
+            if [ -d "$engine/app" ]; then
+              echo "Running Brakeman on $engine"
+              (cd "$engine" && bundle exec brakeman --no-pager)
+            fi
+          done
 
   scan_js:
     runs-on: ubuntu-latest
@@ -58,7 +76,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:17.5
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -66,11 +84,11 @@ jobs:
           - 5432:5432
         options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      # redis:
-      #   image: redis
-      #   ports:
-      #     - 6379:6379
-      #   options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: Install packages
@@ -85,12 +103,59 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
-      - name: Run tests
+      - name: Print Ruby and Bundler environment info
+        run: |
+          ruby -v
+          gem env
+          bundle env
+
+      - name: Install Node.js and Yarn
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nodejs npm
+          sudo npm install -g yarn
+
+      - name: Install Chrome (if not already installed)
+        run: |
+          if ! command -v google-chrome-stable > /dev/null; then
+            wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+            sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+            sudo apt-get update
+            sudo apt-get install -y google-chrome-stable
+          fi
+
+      - name: Install JS dependencies
+        run: |
+          if [ -f package.json ]; then
+            yarn install --frozen-lockfile || npm install
+          fi
+
+      - name: Verify bundle install
+        run: bundle check || bundle install
+
+      - name: Run engine specs
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
+          REDIS_URL: redis://localhost:6379/
+          AIUS_CONTRACT_ADDRESS: "0x01C36ca785bbfBe8744252189feaa0163DCC706F"
+          ENGINE_CONTRACT_ADDRESS: "0x53c9F1a7AfF9f5B1028712e29BC2206Ef9241385"
+          ETHEREUM_EVENT_START_BLOCK: 166636835
+          ETHEREUM_EVENT_POLL_INTERVAL: 10
+          ETHEREUM_NODE_URL: https://arbitrum-sepolia.infura.io/v3/6f7fdfb7ef32469893a8182832073734
+          VAULT_API_SECRET: vault_api_secret
+          VAULT_HOST: localhost
+          VAULT_PORT: 4567
+          TEST_ENV_VAR: true
+          ARBIUS_WAIT_FOR_TRANSACTION_TIMEOUT: 120
+          ARBIUS_WAIT_FOR_TRANSACTION_INTERVAL: 0.5
+          ARBIUS_WAIT_FOR_BULK_TASKS_TIMEOUT: 60
+          ARBIUS_WAIT_FOR_BULK_TASKS_INTERVAL: 0.5
+          ARBIUS_BULK_BOGUS_AUTO_MINE_N: 25
+        run: |
+          bin/rails db:schema:load
+          bin/rails db:test:prepare
+          bundle exec rspec
+          bundle exec rake engine_specs
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

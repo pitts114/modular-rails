@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   db:
     image: postgres:17.5
@@ -16,6 +15,18 @@ services:
       - '6379:6379'
     volumes:
       - redis_data:/data
+  vault:
+    image: 147.135.5.142:5000/pullman14/vault:4b58501
+    container_name: vault
+    ports:
+      - "4567:3000"
+    environment:
+      VAULT_API_SECRET: "secret"
+      VAULT_PASSWORD: "password"
+    volumes:
+      - vault_data:/app/data
+    restart: unless-stopped
 volumes:
   postgres_data:
   redis_data:
+  vault_data:

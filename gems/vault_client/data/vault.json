@@ -1,0 +1,3 @@
+{
+  "0x2e6139691c1a04263812dd76a3e48c66afdfec9a": "{\"crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"22739dbab1f0dda782a5803238366edb\"},\"ciphertext\":\"540bb135be78004c74a309847d7d8aba3f234318abb5ce5c429fc79162980413\",\"kdf\":\"pbkdf2\",\"kdfparams\":{\"c\":262144,\"dklen\":32,\"prf\":\"hmac-sha256\",\"salt\":\"019a6776e3903d787abdf5a227c9b3771380d89a4f92d43385d843a2984eef65\"},\"mac\":\"17b0ee71c81553cb1938a9a1140a83bb54ccf3bfb3b9a1ac797882bf08534fdf\"},\"id\":\"4869907e-066d-4484-b10b-61ca177e4e43\",\"version\":3}"
+}

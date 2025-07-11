@@ -6,6 +6,11 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Load environment variables from .env using dotenv in development and test
+if defined?(Dotenv)
+  Dotenv::Rails.load
+end
+
 module ArbiusCommandCenter
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -23,5 +28,20 @@ module ArbiusCommandCenter
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Use Resque for ActiveJob
+    config.active_job.queue_adapter = :resque
+
+    config.active_record.schema_format = :sql
+
+    config.before_configuration do
+      if Rails.env.production? && File.directory?("/run/secrets")
+        Dir.foreach("/run/secrets") do |filename|
+          next if [ ".", ".." ].include? filename
+
+          ENV[filename] = File.read("/run/secrets/#{filename}").chomp
+        end
+      end
+    end
   end
 end

@@ -18,7 +18,7 @@ gem "stimulus-rails"
 gem "jbuilder"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
+gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -41,6 +41,25 @@ gem "thruster", require: false
 # gem "image_processing", "~> 1.2"
 
 gem "redis"
+gem "vault_client", path: "gems/vault_client"
+gem "clockwork"
+
+gem "sinatra", "~> 2.2"
+
+gem "sentry-ruby"
+gem "sentry-rails"
+gem "sentry-resque"
+
+gem "csv"
+
+gem "pagerduty"
+
+# Feature flagging
+# Flipper is a flexible, production-ready feature flag system for Ruby/Rails
+# https://github.com/flippercloud/flipper
+gem "flipper"
+gem "flipper-active_record"
+gem "flipper-ui"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -52,7 +71,12 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
+  gem "rspec", "~> 3.13", groups: [ :development, :test ]
+
   gem "rspec-rails"
+  gem "dotenv-rails"
+  gem "pry-byebug"
+  gem "factory_bot_rails"
 end
 
 group :development do
@@ -64,4 +88,41 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+end
+
+gem "resque"
+
+# Remove all gems from the global group by default, and only add engines and their dependencies to the global group as they are scanned
+require "set"
+engine_dependencies = Set.new
+circular_stack = []
+
+def scan_for_engine_dependencies(engine, engine_dependencies = Set.new, circular_stack = [])
+  path = File.expand_path("engines/", __dir__)
+  engine_path = File.join(path, engine)
+  return unless File.directory?(engine_path)
+  if circular_stack.include?(engine)
+    raise "Circular dependency detected: #{(circular_stack + [ engine ]).join(' -> ')}"
+  end
+  return if engine_dependencies.include?(engine)
+  engine_dependencies << engine
+  circular_stack.push(engine)
+  gemspec_file = File.join(engine_path, "#{engine}.gemspec")
+  if File.exist?(gemspec_file)
+    spec = Gem::Specification.load(gemspec_file)
+    spec.dependencies.each do |dep|
+      scan_for_engine_dependencies(dep.name, engine_dependencies, circular_stack)
+    end
+  end
+  circular_stack.pop
+end
+
+# Scan all engines and add them and their dependencies to the global group
+Dir.glob(File.expand_path("engines/*", __dir__)).each do |path|
+  engine = File.basename(path)
+  scan_for_engine_dependencies(engine, engine_dependencies, circular_stack)
+end
+
+engine_dependencies.each do |engine|
+  gem engine, path: "engines/#{engine}", require: true
 end

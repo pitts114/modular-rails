@@ -1,3 +1,5 @@
+require "resque/server"
+
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -11,4 +13,15 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  mount Admin::Engine => "/admin"
+
+  # Mount Resque web UI (admin only in production)
+  # if Rails.env.development? || Rails.env.test?
+  #   mount Resque::Server.new, at: "/resque"
+  # end
+  mount Resque::Server.new, at: "/resque"
+
+  # Mount Flipper UI for feature flag management
+  mount Flipper::UI.app(Flipper) => "/flipper"
 end

@@ -1,0 +1,152 @@
+<style>
+.solutions-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 32px 36px 24px 36px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow-x: auto;
+}
+.solutions-container h1 {
+  text-align: center;
+  margin-bottom: 28px;
+  color: #2d3748;
+}
+.solutions-container .pagination {
+  text-align: center;
+  margin-top: 24px;
+}
+.solutions-container .pagination span,
+.solutions-container .pagination a {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 6px 14px;
+  border-radius: 5px;
+  background: #e2e8f0;
+  color: #2d3748;
+  font-weight: 500;
+  text-decoration: none;
+}
+.solutions-container .pagination span {
+  background: #3182ce;
+  color: #fff;
+}
+.solutions-container .pagination a:hover {
+  background: #63b3ed;
+  color: #fff;
+}
+.solutions-container .back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  padding: 8px 18px;
+  background: #3182ce;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.solutions-container .back-link:hover {
+  background: #225ea8;
+}
+.solutions-table {
+  width: 100%;
+  min-width: 700px;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+  table-layout: auto;
+}
+.solutions-table th, .solutions-table td {
+  padding: 10px 8px;
+  text-align: left;
+}
+.solutions-table th {
+  background: #e2e8f0;
+  color: #2b6cb0;
+  font-weight: 700;
+  border-bottom: 2px solid #cbd5e1;
+}
+.solutions-table tr {
+  background: #f7fafc;
+}
+.solutions-table tr:nth-child(even) {
+  background: #e6f0fa;
+}
+.solutions-table td {
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 15px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.solutions-table a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.solutions-table a:hover {
+  text-decoration: underline;
+}
+.solutions-table tr.row-green {
+  background: #e6fbe7 !important;
+}
+.solutions-table tr.row-red {
+  background: #ffeaea !important;
+}
+</style>
+<div class="solutions-container">
+  <%= link_to 'Back to Admin Home', admin.root_path, class: 'back-link' %>
+  <h1>Solutions</h1>
+  <div style="overflow-x:auto;">
+    <table class="solutions-table">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Miner</th>
+          <th>Contestation Yea Votes</th>
+          <th>Contestation Nay Votes</th>
+          <th>Contestation Submitted</th>
+          <th>Solution Claimed</th>
+          <th>Contestation Vote Finished</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @solutions.each do |solution| %>
+          <% row_class = if solution[:contestation_submitted] && solution[:total_nay_votes] >= solution[:total_yea_votes]
+            'row-green'
+          elsif solution[:contestation_submitted] && solution[:total_yea_votes] > solution[:total_nay_votes]
+            'row-red'
+          else
+            ''
+          end %>
+          <tr class="<%= row_class %>">
+            <td><%= link_to solution[:task_id], admin.solution_path(solution[:solution_submitted_event_id]) %></td>
+            <td><%= link_to solution[:miner], "#{@arbitrum_block_explorer}/address/#{solution[:miner]}" %></td>
+            <td><%= solution[:total_yea_votes] %></td>
+            <td><%= solution[:total_nay_votes] %></td>
+            <td><%= solution[:contestation_submitted] ? 'Yes' : 'No' %></td>
+            <td><%= solution[:solution_claimed] ? 'Yes' : 'No' %></td>
+            <td><%= solution[:contestation_vote_finished] ? 'Yes' : 'No' %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <% total_pages = (@total_count.to_f / @per_page).ceil %>
+    <% if total_pages > 1 %>
+      <% (1..total_pages).each do |page| %>
+        <% if page == @current_page %>
+          <span><%= page %></span>
+        <% else %>
+          <%= link_to page, admin.solutions_path(page: page) %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

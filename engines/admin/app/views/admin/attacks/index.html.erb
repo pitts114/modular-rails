@@ -1,0 +1,199 @@
+<script>
+  var refreshInterval = 15; // seconds
+  var secondsLeft = refreshInterval;
+  var refreshEnabled = true;
+  // Load state from localStorage
+  if (localStorage.getItem('attacksAutoRefresh') === 'false') {
+    refreshEnabled = false;
+  }
+  function updateRefreshText() {
+    var el = document.getElementById('refresh-timer');
+    if (el) {
+      el.textContent = 'This page will refresh in ' + secondsLeft + ' second' + (secondsLeft === 1 ? '' : 's') + '.';
+    }
+  }
+  function setCheckboxState() {
+    var cb = document.getElementById('refresh-toggle');
+    if (cb) {
+      cb.checked = refreshEnabled;
+    }
+  }
+  setInterval(function() {
+    if (!refreshEnabled) return;
+    secondsLeft--;
+    updateRefreshText();
+    if (secondsLeft <= 0) {
+      window.location.reload();
+    }
+  }, 1000);
+  document.addEventListener('DOMContentLoaded', function() {
+    setCheckboxState();
+    updateRefreshText();
+    var cb = document.getElementById('refresh-toggle');
+    if (cb) {
+      cb.addEventListener('change', function() {
+        refreshEnabled = cb.checked;
+        localStorage.setItem('attacksAutoRefresh', refreshEnabled);
+        if (refreshEnabled) {
+          secondsLeft = refreshInterval;
+          updateRefreshText();
+        }
+      });
+    }
+  });
+</script>
+<style>
+.attacks-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 32px 36px 24px 36px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow-x: auto;
+}
+.attacks-container h1 {
+  text-align: center;
+  margin-bottom: 28px;
+  color: #2d3748;
+}
+.attacks-container .pagination {
+  text-align: center;
+  margin-top: 24px;
+}
+.attacks-container .pagination span,
+.attacks-container .pagination a {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 6px 14px;
+  border-radius: 5px;
+  background: #e2e8f0;
+  color: #2d3748;
+  font-weight: 500;
+  text-decoration: none;
+}
+.attacks-container .pagination span {
+  background: #3182ce;
+  color: #fff;
+}
+.attacks-container .pagination a:hover {
+  background: #63b3ed;
+  color: #fff;
+}
+.attacks-container .back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  padding: 8px 18px;
+  background: #3182ce;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.attacks-container .back-link:hover {
+  background: #225ea8;
+}
+.attacks-table {
+  width: 100%;
+  min-width: 700px;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+  table-layout: auto;
+}
+.attacks-table th, .attacks-table td {
+  padding: 10px 8px;
+  text-align: left;
+}
+.attacks-table th {
+  background: #e2e8f0;
+  color: #2b6cb0;
+  font-weight: 700;
+  border-bottom: 2px solid #cbd5e1;
+}
+.attacks-table tr {
+  background: #f7fafc;
+}
+.attacks-table tr:nth-child(even) {
+  background: #e6f0fa;
+}
+.attacks-table td {
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 15px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.attacks-table a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.attacks-table a:hover {
+  text-decoration: underline;
+}
+.attacks-table tr.row-green {
+    background: #e6fbe7 !important;
+  }
+  .attacks-table tr.row-red {
+    background: #ffeaea !important;
+  }
+</style>
+<div class="attacks-container">
+  <div style="text-align:right; color:#888; font-size:14px; margin-bottom:8px;">
+    <label style="cursor:pointer;">
+      <input type="checkbox" id="refresh-toggle" style="vertical-align:middle; margin-right:4px;">
+      Auto-refresh
+    </label>
+    <span id="refresh-timer" style="margin-left:12px;"></span>
+  </div>
+  <%= link_to 'Back to Admin Home', admin.root_path, class: 'back-link' %>
+  <h1>Attack Solutions</h1>
+  <div style="overflow-x:auto;">
+    <table class="attacks-table">
+      <thead>
+        <tr>
+          <th>Task ID</th>
+          <th>Solution Miner</th>
+          <th>Yea Votes</th>
+          <th>Nay Votes</th>
+          <th>Contestation Vote Finished</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @attacks.each do |attack| %>
+          <% row_class = if attack[:total_yea_votes] > attack[:total_nay_votes] && (attack[:total_yea_votes] > 0 || attack[:total_nay_votes] > 0)
+            'row-green'
+          elsif attack[:total_nay_votes] >= attack[:total_yea_votes] && (attack[:total_yea_votes] > 0 || attack[:total_nay_votes] > 0)
+            'row-red'
+          else
+            ''
+          end %>
+          <tr class="<%= row_class %>">
+            <td><%= link_to attack[:task_id], admin.attack_path(attack[:attack_solution_id]) %></td>
+            <td><%= link_to attack[:miner], "#{@arbitrum_block_explorer}/address/#{attack[:miner]}" if attack[:miner] %></td>
+            <td><%= attack[:total_yea_votes] %></td>
+            <td><%= attack[:total_nay_votes] %></td>
+            <td><%= attack[:contestation_vote_finished] ? 'Yes' : 'No' %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <% total_pages = (@total_count.to_f / @per_page).ceil %>
+    <% if total_pages > 1 %>
+      <% (1..total_pages).each do |page| %>
+        <% if page == @current_page %>
+          <span><%= page %></span>
+        <% else %>
+          <%= link_to page, admin.attacks_path(page: page) %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

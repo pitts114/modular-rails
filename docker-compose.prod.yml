@@ -1,0 +1,386 @@
+version: '3.8'
+
+x-arbius-image: &arbius-image
+  image: 147.135.5.142:5000/pullman14/arbius-command-center:68442b5
+
+x-arbius-command-center-env: &arbius-command-center-env
+  RAILS_ENV: production
+  AIUS_CONTRACT_ADDRESS: "0x4a24B101728e07A52053c13FB4dB2BcF490CAbc3"
+  ARBITRUM_BLOCK_EXPLORER: 'https://arbiscan.io/'
+  ARBIUS_COMMAND_CENTER_DATABASE_HOST: postgres
+  ARBIUS_COMMAND_CENTER_DATABASE_PORT: 5432
+  BULK_TASKS_CONTRACT_ADDRESS: '0x245e065e8c3E45BAeB0f087ee4d52fAfC2b55df3'
+  ENABLE_CLAIM_UNCONTESTED_SOLUTIONS_JOB: 'false'
+  ENGINE_CONTRACT_ADDRESS: "0x9b51Ef044d3486A1fB0A2D55A6e0CeeAdd323E66"
+  ETHEREUM_EVENT_POLL_INTERVAL: 3
+  ARBIUS_WAIT_FOR_TRANSACTION_TIMEOUT: 120 # we can wait for transactions to be mined, if there's an error on our end then waiting shorter or longer doesn't matter.
+  ARBIUS_WAIT_FOR_TRANSACTION_INTERVAL: 0.5 # need to poll quickly
+  ARBIUS_WAIT_FOR_BULK_TASKS_TIMEOUT: 60 # we cant afford to leave tasks behind, otherwise we will never solve them, but we cant wait forever either.
+  ARBIUS_WAIT_FOR_BULK_TASKS_INTERVAL: 0.5 # need to poll quickly
+  ARBIUS_BULK_BOGUS_AUTO_MINE_N: 2 # 25 # 200
+  ARBIUS_WAI_BULK_BOGUS_AUTO_MINE_INTERVAL_SECONDS: 3600 # 300
+  ARBIUS_VALIDATOR_DEPOSIT_ALERT_MINIMUM_WEI: 1 # 1 wei # 10000000000000000000 # 10 ETH
+  ETHEREUM_EVENT_START_BLOCK: 353299332
+  ETHEREUM_NODE_URL: 'https://arbitrum-mainnet.infura.io/v3/6f7fdfb7ef32469893a8182832073734'
+  ETHEREUM_USE_CREDIT_LIMITING: 'true'
+  ETHEREUM_CREDIT_LIMIT: 4000
+  REDIS_URL: 'redis://redis:6379'
+  VAULT_HOST: vault
+  VAULT_PORT: 3000
+  SENTRY_DSN: 'https://89e493b2be50efa79105df1c059e781d@o347893.ingest.us.sentry.io/4509595158577152'
+
+x-arbius-worker-env: &arbius-worker-env
+  COUNT: 1
+  FORK_PER_JOB: "false"
+  INTERVAL: 0.1
+
+x-arbius-command-center-secrets: &arbius-command-center-secrets
+  - ARBIUS_COMMAND_CENTER_DATABASE_USERNAME
+  - ARBIUS_COMMAND_CENTER_DATABASE_PASSWORD
+  - PAGERDUTY_API_KEY
+  - SECRET_KEY_BASE
+  - REDIS_PASSWORD
+  - VAULT_API_SECRET
+
+services:
+  traefik:
+    image: traefik:v3.4.3
+    command:
+      - --providers.docker
+      - --providers.swarm
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.myresolver.acme.tlschallenge=true
+      - --certificatesresolvers.myresolver.acme.email=contact@justinpitts.dev
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "443:443"
+    volumes:
+      - traefik_letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    secrets:
+      - traefik_basic_auth
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  web:
+    <<: *arbius-image
+    environment: *arbius-command-center-env
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rails s -b 0.0.0.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.acc.rule=Host(`acc.justinpitts.dev`)"
+      - "traefik.http.routers.acc.entrypoints=websecure"
+      - "traefik.http.routers.acc.tls.certresolver=myresolver"
+      - "traefik.http.services.acc.loadbalancer.server.port=3000"
+      - "traefik.http.routers.acc.middlewares=acc-auth"
+      - "traefik.http.middlewares.acc-auth.basicauth.usersfile=/run/secrets/traefik_basic_auth"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  admin:
+    <<: *arbius-image
+    environment: *arbius-command-center-env
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+      RUN_AT_EXIT_HOOKS: 1
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='default'
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  event_poller:
+    <<: *arbius-image
+    environment: *arbius-command-center-env
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec bin/event_poller
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  clock:
+    <<: *arbius-image
+    environment: *arbius-command-center-env
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec clockwork config/clockwork.rb
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  postgres:
+    image: postgres:17.5
+    environment: # username/password set up after initial deployment
+      POSTGRES_DB: arbius_command_center_production
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.db == true
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:8.0.2
+    command: ["sh", "-c", "exec redis-server --requirepass \"$$(cat /run/secrets/REDIS_PASSWORD)\""]
+    secrets:
+      - REDIS_PASSWORD
+    volumes:
+      - redis_data:/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.redis == true
+      restart_policy:
+        condition: on-failure
+
+  vault:
+    image: 147.135.5.142:5000/pullman14/vault:33a76b9
+    environment:
+      PRODUCTION: 'true'
+    volumes:
+      - vault_data:/app/data
+    secrets:
+      - VAULT_API_SECRET
+      - VAULT_PASSWORD
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.vault == true
+      restart_policy:
+        condition: on-failure
+
+  ethereum_event_publisher_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='ethereum_event_publisher'
+    deploy:
+      replicas: 10
+      restart_policy:
+        condition: on-failure
+
+  ethereum_event_handler_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='ethereum_event_handler'
+    deploy:
+      replicas: 10
+      restart_policy:
+        condition: on-failure
+
+  ethereum_send_transaction_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='ethereum_send_transaction'
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  ethereum_event_finalizer_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='ethereum_event_finalizer'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  arbius_bogus_mine_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='arbius_bogus_mine'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  arbius_check_miner_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='arbius_check_miner_contestation_vote'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  arbius_vote_on_contestation_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='arbius_vote_on_contestation'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  arbius_event_handler_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='arbius_event_handler_high_priority,arbius_event_handler'
+    deploy:
+      replicas: 10
+      restart_policy:
+        condition: on-failure
+
+  arbius_defend_solution_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='arbius_defend_solution'
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  arbius_attack_worker:
+    <<: *arbius-image
+    stop_grace_period: 30s
+    environment:
+      <<: [*arbius-command-center-env, *arbius-worker-env]
+    secrets: *arbius-command-center-secrets
+    depends_on:
+      - postgres
+      - redis
+    command: bundle exec rake resque:work QUEUE='arbius_attack_solution'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  dozzle:
+    image: amir20/dozzle:v8.13.4
+    environment:
+      DOZZLE_MODE: swarm
+      DOZZLE_BASE: /logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.rule=Host(`acc.justinpitts.dev`) && PathPrefix(`/logs`)"
+      - "traefik.http.routers.dozzle.entrypoints=websecure"
+      - "traefik.http.routers.dozzle.tls.certresolver=myresolver"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+      - "traefik.http.routers.dozzle.middlewares=dozzle-auth"
+      - "traefik.http.middlewares.dozzle-auth.basicauth.usersfile=/run/secrets/traefik_basic_auth"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  postgres_data:
+  redis_data:
+  traefik_letsencrypt:
+  vault_data:
+
+secrets:
+  ARBIUS_COMMAND_CENTER_DATABASE_USERNAME:
+    external: true
+  ARBIUS_COMMAND_CENTER_DATABASE_PASSWORD:
+    external: true
+  PAGERDUTY_API_KEY:
+    external: true
+  REDIS_PASSWORD:
+    external: true
+  SECRET_KEY_BASE:
+    external: true
+  VAULT_API_SECRET:
+    external: true
+  VAULT_PASSWORD:
+    external: true
+  traefik_basic_auth:
+    external: true

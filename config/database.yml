@@ -18,14 +18,16 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  query_cache: false
 
 
 development:
   <<: *default
   database: arbius_command_center_development
-  username: postgres
-  password: postgres
-  host: localhost
+  username: <%= ENV['ARBIUS_COMMAND_CENTER_DATABASE_USERNAME'] %>
+  password: <%= ENV['ARBIUS_COMMAND_CENTER_DATABASE_PASSWORD'] %>
+  host: <%= ENV['ARBIUS_COMMAND_CENTER_DATABASE_HOST'] %>
+  port: <%= ENV['ARBIUS_COMMAND_CENTER_DATABASE_PORT'] %>
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -88,8 +90,10 @@ production:
   primary: &primary_production
     <<: *default
     database: arbius_command_center_production
-    username: arbius_command_center
+    username: <%= ENV["ARBIUS_COMMAND_CENTER_DATABASE_USERNAME"] %>
     password: <%= ENV["ARBIUS_COMMAND_CENTER_DATABASE_PASSWORD"] %>
+    host: <%= ENV["ARBIUS_COMMAND_CENTER_DATABASE_HOST"] %>
+    port: <%= ENV["ARBIUS_COMMAND_CENTER_DATABASE_PORT"] %>
   cache:
     <<: *primary_production
     database: arbius_command_center_production_cache

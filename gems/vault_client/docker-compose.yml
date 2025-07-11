@@ -1,0 +1,14 @@
+services:
+  vault:
+    image: vault:820999f
+    container_name: vault
+    ports:
+      - "4567:3000"
+    environment:
+      VAULT_API_SECRET: "secret"
+      VAULT_PASSWORD: "password"
+      # VAULT_FILE_PATH: "./data/vault.json"
+      # PORT: "3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

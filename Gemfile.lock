@@ -1,3 +1,33 @@
+PATH
+  remote: engines/admin
+  specs:
+    admin (0.1.0)
+      rails (>= 8.0.2)
+
+PATH
+  remote: engines/arbius
+  specs:
+    arbius (0.1.0)
+      digest-keccak
+      ethereum
+      pagerduty
+      rails (>= 8.0.2)
+      websocket-client-simple
+
+PATH
+  remote: engines/ethereum
+  specs:
+    ethereum (0.1.0)
+      eth (~> 0.5.14)
+      rails (>= 8.0.2)
+      vault_client
+
+PATH
+  remote: gems/vault_client
+  specs:
+    vault_client (0.1.0)
+      json
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -76,6 +106,7 @@ GEM
       public_suffix (>= 2.0.2, < 7.0)
     ast (2.4.3)
     base64 (0.3.0)
+    bcrypt (3.1.20)
     bcrypt_pbkdf (1.1.1)
     benchmark (0.4.1)
     bigdecimal (3.2.2)
@@ -85,6 +116,7 @@ GEM
     brakeman (7.0.2)
       racc
     builder (3.3.0)
+    byebug (12.0.0)
     capybara (3.40.0)
       addressable
       matrix
@@ -94,21 +126,67 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
+    clockwork (3.0.2)
+      activesupport
+      tzinfo
+    coderay (1.1.3)
     concurrent-ruby (1.3.5)
     connection_pool (2.5.3)
     crass (1.0.6)
+    csv (3.3.5)
     date (3.4.1)
-    debug (1.10.0)
+    debug (1.11.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
     diff-lcs (1.6.2)
+    digest-keccak (0.0.5)
     dotenv (3.1.8)
+    dotenv-rails (3.1.8)
+      dotenv (= 3.1.8)
+      railties (>= 6.1)
     drb (2.2.3)
     ed25519 (1.4.0)
     erb (5.0.1)
     erubi (1.13.1)
     et-orbi (1.2.11)
       tzinfo
+    eth (0.5.14)
+      bigdecimal (~> 3.1)
+      forwardable (~> 1.3)
+      keccak (~> 1.3)
+      konstructor (~> 1.0)
+      openssl (>= 2.2, < 4.0)
+      rbsecp256k1 (~> 6.0)
+      scrypt (~> 3.0)
+    event_emitter (0.2.6)
+    factory_bot (6.5.4)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.0)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
+    ffi (1.17.2-aarch64-linux-gnu)
+    ffi (1.17.2-aarch64-linux-musl)
+    ffi (1.17.2-arm-linux-gnu)
+    ffi (1.17.2-arm-linux-musl)
+    ffi (1.17.2-arm64-darwin)
+    ffi (1.17.2-x86_64-linux-gnu)
+    ffi (1.17.2-x86_64-linux-musl)
+    ffi-compiler (1.3.2)
+      ffi (>= 1.15.5)
+      rake
+    flipper (1.3.5)
+      concurrent-ruby (< 2)
+    flipper-active_record (1.3.5)
+      activerecord (>= 4.2, < 9)
+      flipper (~> 1.3.5)
+    flipper-ui (1.3.5)
+      erubi (>= 1.0.0, < 2.0.0)
+      flipper (~> 1.3.5)
+      rack (>= 1.4, < 4)
+      rack-protection (>= 1.5.3, < 5.0.0)
+      rack-session (>= 1.0.2, < 3.0.0)
+      sanitize (< 8)
+    forwardable (1.3.3)
     fugit (1.11.1)
       et-orbi (~> 1, >= 1.2.11)
       raabro (~> 1.4)
@@ -129,7 +207,7 @@ GEM
       actionview (>= 5.0.0)
       activesupport (>= 5.0.0)
     json (2.12.2)
-    kamal (2.6.1)
+    kamal (2.7.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
       bcrypt_pbkdf (~> 1.0)
@@ -140,6 +218,8 @@ GEM
       sshkit (>= 1.23.0, < 2.0)
       thor (~> 1.3)
       zeitwerk (>= 2.6.18, < 3.0)
+    keccak (1.3.2)
+    konstructor (1.0.2)
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
     logger (1.7.0)
@@ -153,9 +233,16 @@ GEM
       net-smtp
     marcel (1.0.4)
     matrix (0.4.2)
+    method_source (1.1.0)
     mini_mime (1.1.5)
+    mini_portile2 (2.8.9)
     minitest (5.25.5)
+    mono_logger (1.1.2)
     msgpack (1.8.0)
+    multi_json (1.15.0)
+    mustermann (2.0.2)
+      ruby2_keywords (~> 0.0.1)
+    mutex_m (0.3.0)
     net-imap (0.5.8)
       date
       net-protocol
@@ -185,12 +272,15 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.8-x86_64-linux-musl)
       racc (~> 1.4)
-    ostruct (0.6.1)
+    openssl (3.3.0)
+    ostruct (0.6.2)
+    pagerduty (4.0.1)
     parallel (1.27.0)
     parser (3.3.8.0)
       ast (~> 2.4.1)
       racc
     pg (1.5.9)
+    pkg-config (1.6.2)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -200,6 +290,12 @@ GEM
       activesupport (>= 7.0.0)
       rack
       railties (>= 7.0.0)
+    pry (0.15.2)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
+    pry-byebug (3.11.0)
+      byebug (~> 12.0)
+      pry (>= 0.13, < 0.16)
     psych (5.2.6)
       date
       stringio
@@ -208,14 +304,16 @@ GEM
       nio4r (~> 2.0)
     raabro (1.4.0)
     racc (1.8.1)
-    rack (3.1.16)
-    rack-session (2.1.1)
-      base64 (>= 0.1.0)
-      rack (>= 3.0.0)
+    rack (2.2.17)
+    rack-protection (2.2.4)
+      rack
+    rack-session (1.0.2)
+      rack (< 3)
     rack-test (2.2.0)
       rack (>= 1.3)
-    rackup (2.2.1)
-      rack (>= 3)
+    rackup (1.0.1)
+      rack (< 3)
+      webrick
     rails (8.0.2)
       actioncable (= 8.0.2)
       actionmailbox (= 8.0.2)
@@ -247,18 +345,33 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.3.0)
-    rdoc (6.14.0)
+    rbsecp256k1 (6.0.0)
+      mini_portile2 (~> 2.8)
+      pkg-config (~> 1.5)
+      rubyzip (~> 2.3)
+    rdoc (6.14.1)
       erb
       psych (>= 4.0.0)
     redis (5.4.0)
       redis-client (>= 0.22.0)
     redis-client (0.24.0)
       connection_pool
+    redis-namespace (1.11.0)
+      redis (>= 4)
     regexp_parser (2.10.0)
     reline (0.6.1)
       io-console (~> 0.5)
+    resque (2.7.0)
+      mono_logger (~> 1)
+      multi_json (~> 1.0)
+      redis-namespace (~> 1.6)
+      sinatra (>= 0.9.2)
     rexml (3.4.1)
-    rspec-core (3.13.4)
+    rspec (3.13.1)
+      rspec-core (~> 3.13.0)
+      rspec-expectations (~> 3.13.0)
+      rspec-mocks (~> 3.13.0)
+    rspec-core (3.13.5)
       rspec-support (~> 3.13.0)
     rspec-expectations (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
@@ -266,7 +379,7 @@ GEM
     rspec-mocks (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-rails (8.0.0)
+    rspec-rails (8.0.1)
       actionpack (>= 7.2)
       activesupport (>= 7.2)
       railties (>= 7.2)
@@ -304,7 +417,14 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    ruby2_keywords (0.0.5)
     rubyzip (2.4.1)
+    sanitize (7.0.0)
+      crass (~> 1.0.2)
+      nokogiri (>= 1.16.8)
+    scrypt (3.0.8)
+      ffi-compiler (>= 1.0, < 2.0)
+      rake (>= 9, < 14)
     securerandom (0.4.1)
     selenium-webdriver (4.33.0)
       base64 (~> 0.2)
@@ -312,7 +432,21 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
-    solid_cable (3.0.8)
+    sentry-rails (5.26.0)
+      railties (>= 5.0)
+      sentry-ruby (~> 5.26.0)
+    sentry-resque (5.26.0)
+      resque (>= 1.24)
+      sentry-ruby (~> 5.26.0)
+    sentry-ruby (5.26.0)
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+    sinatra (2.2.4)
+      mustermann (~> 2.0)
+      rack (~> 2.2)
+      rack-protection (= 2.2.4)
+      tilt (~> 2.0)
+    solid_cable (3.0.11)
       actioncable (>= 7.2)
       activejob (>= 7.2)
       activerecord (>= 7.2)
@@ -339,10 +473,11 @@ GEM
       railties (>= 6.0.0)
     stringio (3.1.7)
     thor (1.3.2)
-    thruster (0.1.13)
-    thruster (0.1.13-aarch64-linux)
-    thruster (0.1.13-arm64-darwin)
-    thruster (0.1.13-x86_64-linux)
+    thruster (0.1.14)
+    thruster (0.1.14-aarch64-linux)
+    thruster (0.1.14-arm64-darwin)
+    thruster (0.1.14-x86_64-linux)
+    tilt (2.6.0)
     timeout (0.4.3)
     turbo-rails (2.0.16)
       actionpack (>= 7.1.0)
@@ -359,7 +494,13 @@ GEM
       activemodel (>= 6.0.0)
       bindex (>= 0.4.0)
       railties (>= 6.0.0)
+    webrick (1.9.1)
     websocket (1.2.11)
+    websocket-client-simple (0.9.0)
+      base64
+      event_emitter
+      mutex_m
+      websocket
     websocket-driver (0.8.0)
       base64
       websocket-extensions (>= 0.1.0)
@@ -380,21 +521,40 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  admin!
+  arbius!
+  bcrypt (~> 3.1.7)
   bootsnap
   brakeman
   capybara
+  clockwork
+  csv
   debug
+  dotenv-rails
+  ethereum!
+  factory_bot_rails
+  flipper
+  flipper-active_record
+  flipper-ui
   importmap-rails
   jbuilder
   kamal
+  pagerduty
   pg (~> 1.1)
   propshaft
+  pry-byebug
   puma (>= 5.0)
   rails (~> 8.0.2)
   redis
+  resque
+  rspec (~> 3.13)
   rspec-rails
   rubocop-rails-omakase
   selenium-webdriver
+  sentry-rails
+  sentry-resque
+  sentry-ruby
+  sinatra (~> 2.2)
   solid_cable
   solid_cache
   solid_queue
@@ -402,6 +562,7 @@ DEPENDENCIES
   thruster
   turbo-rails
   tzinfo-data
+  vault_client!
   web-console
 
 BUNDLED WITH

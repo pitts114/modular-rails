@@ -1,0 +1,159 @@
+# Example hash (similar structure to the decoded JSON you provided)
+hash = {
+  prompt: "Assume the persona of Amica, a feisty human with extraordinary intellectual capabilities.",
+  user: "[neutral] sup",
+  amica: "I'm here to facilitate intellectual discussions."
+}
+
+# Step 1: Convert hash to JSON string
+json_string = JSON.generate(hash)
+
+# Step 2: Convert JSON string to hex
+# Each character is converted to its byte representation, then to hex
+hex_string = json_string.bytes.map { |b| b.to_s(16).rjust(2, '0') }.join
+
+# Step 3: Add '0x' prefix to match your format
+hex_string = "0x#{hex_string}"
+
+# Output the result
+puts hex_string
+
+# Example hex string (partial version of your input)
+hex_string = "0x7b2270726f6d7074223a22417373756d6520"
+
+# Step 1: Remove '0x' prefix if present
+hex_string = hex_string.sub(/^0x/, '')
+
+# Step 2 & 3: Split into pairs and convert to bytes
+bytes = hex_string.scan(/../).map { |hex_pair| hex_pair.hex }
+
+# Step 4: Output the byte array
+puts bytes.inspect
+
+# Optional: If you need the bytes as a binary string (e.g., for further processing)
+binary_string = bytes.pack('C*')
+puts binary_string
+
+
+# first model registered on sepolia: 0x7cd06b3facb05c072fb359904a7381e8f28218f410830f85018f3922621ed33a
+
+sepolia engine contract: https://sepolia.arbiscan.io/address/0x53c9f1a7aff9f5b1028712e29bc2206ef9241385#code
+
+
+todo: infura might have different "latest" block every time when called. how do i handle this?
+
+
+sepolia engine event topics:
+solutionclaimed: 0x0b76b4ae356796814d36b46f7c500bbd27b2cce1e6059a6fa2bebfd5a389b190
+tasksubmitted: 0xc3d3e0544c80e3bb83f62659259ae1574f72a91515ab3cae3dd75cf77e1b0aea
+signalcommitment: 0x09b4c028a2e50fec6f1c6a0163c59e8fbe92b231e5c03ef3adec585e63a14b92
+
+# Overall workflow
+1. Have miner submit solution
+2. Listen for task submitted event to get task id
+2. Wait until solution can be claimed
+  a. have job run every minute that calls on contract to get wait time, then see if i have
+  non-contested solutions that can be claimed that were submitted further back in time than wait time
+  b. claim solution
+3. Listen for contestationsubmitted event on my solution
+  a. Do nothing, unless our validator did not have enough staked to cover a vote, since our validator votes in our favor on contestation submission
+  b. Send out 1 validator to vote in our favor for every ContestationVote against us (every additional vote against us)
+  c. have job run every minute that checks on each of our contested solutions, check if votingPeriodEnded is true, then run contestationvotefinish if we won
+4. Check if validators need top-up on eth or aius deposit
+
+# Defense workflow
+1. Run gobius miner
+2. Listen for task submitted event to get task id
+3. Listen for contestationsubmitted event on my solution
+  a. Do nothing, unless our validator did not have enough staked to cover a vote, since our validator votes in our favor on contestation submission
+  b. Send out 1 validator to vote in our favor for every ContestationVote against us (every additional vote against us)
+  c. have job run every minute that checks on each of our contested solutions, check if votingPeriodEnded is true, then run contestationvotefinish if we won
+4. Check if validators need top-up on eth or aius deposit
+
+handle address comparison and case sensitivity
+
+after release, make change to fetch block time for events after we have a block number for them. That way we dont have to rely on created_at. Faster for getting older claims.
+
+# run query getting task ids of all unsolved qwen tasks
+# run event listener on contestation events, run bogusmineservice on 1 task to see what happens, wait 5 minutes
+
+build a ui to see basic info like:
+- tasks solved by our miners
+- contestations against us and their vote totals
+- whether these contestations have been finished
+
+snipe protection.
+have a poller worker check every 1 second for contestations that are beyond
+the normal duration time that dont have related vote finish events.
+if we're 10 seconds before vote end and we're losing,
+put all votes towards vote?
+edit: we'll just pay for infura and scrape faster, add event listener back in later
+
+add tx_mined? to rate limit list
+
+monitor eth and aius balances. compare aius balance to validator minimum, alert when we drop below some percentage.
+
+arbiscan bulktasks 0x245e065e8c3e45baeb0f087ee4d52fafc2b55df3
+sepolia bulktasks 0x75B9acacaEaB562c8Fc0205df208495836bE9079
+
+todo:
+setup wai miner!
+
+if out vote submit transaction fails, we need to know that and remove the sent vote record
+
+vast ai:
+cd into /src
+python -m cog.server.http
+
+request:
+curl http://23.120.109.2:26191/predictions -X POST -H "Content-Type: application/json" -d '{"input": {"prompt": "pikachu"}}' | jq -r '.output[0]' | sed 's/data:image\/png;base64,//' | base64 -d > ./generated_image.png
+
+get vast ai offers:
+cd ~/code/vast
+source venv/bin/activate
+./vast search offers 'gpu_name in ["RTX 3090"] gpu_ram>=24 disk_space>100' | awk 'NR==1 {print; next} {print | "sort -k10n"}'
+
+get instance
+./vast create instance 12539408 --image r8.im/kasumi-1/cog-wai-v120@sha256:41dc96a3fbc0915d621e94e698ddfb9d8581bea5c97c322ec8c7600fafaa9b24 --env '-p 5000:5000 --gpus=all' --onstart-cmd 'python -m cog.server.http' --jupyter-dir /src --disk 10 --ssh --direct
+
+update gobius to call vault to sign transactions
+
+
+cid=0x12208b7aeb0325974c5aa556ef00fec56ff283f6eefccf4ee2deca9d6c299a6a6a5e a100 80gb pcie cuda 12.7
+cid=0x12208b7aeb0325974c5aa556ef00fec56ff283f6eefccf4ee2deca9d6c299a6a6a5e a100 80gb sxm4 cuda 12.5
+
+submit a task, mine it's solution with miner
+submit a contestation from a hostile validator
+check votes (1/1)
+turn off rjobs, leave event poller on, vote yea on contestation with hostile validator in-line (vote service, then call send transaction service with ethereum_transaction_id)
+check votes (2/1)
+d/c from internet, run rjobs
+check votes (2/2)
+wait for tx to fail and event to be emitted and processed
+check votes (2/1)
+
+
+costs (100 batch size):
+bulk submit transactions tx:
+0.00013840684 ETH ($0.36)
+0.35 AIUS
+
+signal commitments:
+0.00002885115 ETH ($0.07)
+
+submit solutions:
+0.00014786091 ETH ($0.38)
+
+claim solutions (estimated):
+0.00001739705 ETH ($0.05)
+1.7045927287 AIUS
+
+
+next, clear out wai unsolved tasks queue
+
+val min: 582566615276585048979
+slash: 2427360896985771038
+
+42 contestations max after depositing remaining aius into validator stakes
+
+validator deposit topic0 0x8d4844488c19a90828439e71d14ebad860806d04f8ef8b25a82179fab2699b89

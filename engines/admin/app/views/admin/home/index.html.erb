@@ -1,0 +1,174 @@
+<style>
+.dashboard-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 36px 40px 28px 40px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow-x: auto;
+}
+.dashboard-container h1 {
+  text-align: center;
+  margin-bottom: 32px;
+  color: #2d3748;
+}
+.dashboard-container .dashboard-link {
+  display: inline-block;
+  margin-bottom: 28px;
+  padding: 10px 22px;
+  background: #3182ce;
+  color: #fff;
+  border-radius: 7px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.dashboard-container .dashboard-link:hover {
+  background: #225ea8;
+}
+.dashboard-section {
+  margin-bottom: 32px;
+  background: #f7fafc;
+  border-radius: 10px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.dashboard-container h2 {
+  color: #2b6cb0;
+  margin-bottom: 18px;
+}
+.dashboard-container ul {
+  list-style: none;
+  padding: 0;
+}
+.dashboard-container li {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #e6f0fa;
+  box-shadow: none;
+}
+.dashboard-container a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+}
+.dashboard-container a:hover {
+  text-decoration: underline;
+}
+.dashboard-table {
+  width: 100%;
+  min-width: 700px;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+  table-layout: auto;
+}
+.dashboard-table th, .dashboard-table td {
+  padding: 10px 8px;
+  text-align: left;
+}
+.dashboard-table th {
+  background: #e2e8f0;
+  color: #2b6cb0;
+  font-weight: 700;
+  border-bottom: 2px solid #cbd5e1;
+}
+.dashboard-table tr {
+  background: #f7fafc;
+}
+.dashboard-table tr:nth-child(even) {
+  background: #e6f0fa;
+}
+.dashboard-table td {
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 15px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.dashboard-table a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.dashboard-table a:hover {
+  text-decoration: underline;
+}
+.dashboard-table tr.row-green {
+  background: #e6fbe7 !important;
+}
+.dashboard-table tr.row-red {
+  background: #ffeaea !important;
+}
+</style>
+<div class="dashboard-container">
+  <h1>Admin Dashboard</h1>
+  <div style="text-align:center; margin-bottom: 18px; font-size: 18px; color: #2b6cb0;">
+    Latest Block Number: <span style="font-weight:600; color:#225ea8;"> <%= @latest_block_number %> </span>
+  </div>
+  <%= link_to 'View All Solutions', admin.solutions_path, class: 'dashboard-link' %>
+  <%= link_to 'View All Attacks', admin.attacks_path, class: 'dashboard-link' %>
+  <div class="dashboard-section">
+    <h2>Latest Solutions</h2>
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Miner</th>
+            <th>Contestation Yea Votes</th>
+            <th>Contestation Nay Votes</th>
+            <th>Contestation Submitted</th>
+            <th>Solution Claimed</th>
+            <th>Contestation Vote Finished</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @solutions.each do |solution| %>
+            <% row_class = if solution[:contestation_submitted] && solution[:total_nay_votes] >= solution[:total_yea_votes]
+              'row-green'
+            elsif solution[:contestation_submitted] && solution[:total_yea_votes] > solution[:total_nay_votes]
+              'row-red'
+            else
+              ''
+            end %>
+            <tr class="<%= row_class %>">
+              <td><%= link_to solution[:task_id], admin.solution_path(solution[:solution_submitted_event_id]) %></td>
+              <td><%= link_to solution[:miner], "#{@arbitrum_block_explorer}/address/#{solution[:miner]}" %></td>
+              <td><%= solution[:total_yea_votes] %></td>
+              <td><%= solution[:total_nay_votes] %></td>
+              <td><%= solution[:contestation_submitted] ? 'Yes' : 'No' %></td>
+              <td><%= solution[:solution_claimed] ? 'Yes' : 'No' %></td>
+              <td><%= solution[:contestation_vote_finished] ? 'Yes' : 'No' %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="dashboard-section">
+    <h2>Miners</h2>
+    <ul>
+      <% @miners.each do |miner| %>
+        <li>
+          ID: <%= miner.id %>, Address: <%= link_to miner.address, "#{@arbitrum_block_explorer}/address/#{miner.address}" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+  <div class="dashboard-section">
+    <h2>Validators</h2>
+    <ul>
+      <% @validators.each do |validator| %>
+        <li>
+          ID: <%= validator.id %>, Address: <%= link_to validator.address, "#{@arbitrum_block_explorer}/address/#{validator.address}" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

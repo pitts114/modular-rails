@@ -1,0 +1,109 @@
+<style>
+.attack-container {
+  max-width: 700px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 32px 36px 24px 36px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow-x: auto;
+}
+.attack-container h1 {
+  text-align: center;
+  margin-bottom: 28px;
+  color: #2d3748;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  font-size: 2rem;
+}
+.attack-container .back-link {
+  display: inline-block;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  padding: 8px 18px;
+  background: #3182ce;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.attack-container .back-link:hover {
+  background: #225ea8;
+}
+.attack-details-table {
+  width: 100%;
+  min-width: 500px;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  table-layout: auto;
+}
+.attack-details-table th, .attack-details-table td {
+  padding: 10px 8px;
+  text-align: left;
+}
+.attack-details-table th {
+  background: #e2e8f0;
+  color: #2b6cb0;
+  font-weight: 700;
+  border-bottom: 2px solid #cbd5e1;
+  width: 220px;
+}
+.attack-details-table td {
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 15px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+</style>
+<div class="attack-container">
+  <h1>Attack Solution <%= @attack_info[:task_id] %></h1>
+  <table class="attack-details-table">
+    <tr>
+      <th>Task ID</th>
+      <td><%= @attack_info[:task_id] %></td>
+    </tr>
+    <tr>
+      <th>Miner</th>
+      <td><%= link_to @attack_info[:miner], "#{@arbitrum_block_explorer}/address/#{@attack_info[:miner]}" if @attack_info[:miner] %></td>
+    </tr>
+    <tr>
+      <th>Solution Submitted</th>
+      <td><%= @attack_info[:solution_submitted] ? 'Yes' : 'No' %></td>
+    </tr>
+    <tr>
+      <th>Contestation Vote Finished</th>
+      <td><%= @attack_info[:contestation_vote_finished] ? 'Yes' : 'No' %></td>
+    </tr>
+    <tr>
+      <th>Yea Votes</th>
+      <td><%= @attack_info[:total_yea_votes] %></td>
+    </tr>
+    <tr>
+      <th>Nay Votes</th>
+      <td><%= @attack_info[:total_nay_votes] %></td>
+    </tr>
+    <tr>
+      <th>Solution Submitted Event ID</th>
+      <td><%= @attack_info[:solution_submitted_event_id] %></td>
+    </tr>
+    <tr>
+      <th>Solution Submitted Tx</th>
+      <td><%= link_to @attack_info[:solution_submitted_transaction_hash], "#{@arbitrum_block_explorer}/tx/#{@attack_info[:solution_submitted_transaction_hash]}" if @attack_info[:solution_submitted_transaction_hash] %></td>
+    </tr>
+    <tr>
+      <th>Contestation Submitted Event</th>
+      <td>
+        <% if @attack_info[:contestation_submitted_transaction_hash] %>
+          <%= link_to @attack_info[:contestation_submitted_transaction_hash], "#{@arbitrum_block_explorer}/tx/#{@attack_info[:contestation_submitted_transaction_hash]}" %>
+        <% else %>
+          None
+        <% end %>
+      </td>
+    </tr>
+  </table>
+  <%= link_to 'Back to Attacks', admin.attacks_path, class: 'back-link' %>
+</div>

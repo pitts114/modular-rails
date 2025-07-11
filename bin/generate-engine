@@ -1,0 +1,70 @@
+#!/bin/bash
+# Usage: bin/generate-engine NAME [additional plugin options]
+# Example: bin/generate-engine my_engine --skip-git
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 ENGINE_NAME [additional plugin options]"
+  exit 1
+fi
+
+ENGINE_NAME=$1
+shift
+
+bundle exec rails plugin new engines/$ENGINE_NAME --mountable --skip-git "$@"
+
+# Remove the tasks directory in the engine's lib directory
+TASKS_DIR="engines/$ENGINE_NAME/lib/tasks"
+if [ -d "$TASKS_DIR" ]; then
+  rm -rf "$TASKS_DIR"
+fi
+
+# Remove the engine's bin directory
+ENGINE_BIN_DIR="engines/$ENGINE_NAME/bin"
+if [ -d "$ENGINE_BIN_DIR" ]; then
+  rm -rf "$ENGINE_BIN_DIR"
+fi
+
+# Remove the engine's Gemfile and Rakefile
+ENGINE_GEMFILE="engines/$ENGINE_NAME/Gemfile"
+ENGINE_RAKEFILE="engines/$ENGINE_NAME/Rakefile"
+if [ -f "$ENGINE_GEMFILE" ]; then
+  rm "$ENGINE_GEMFILE"
+fi
+if [ -f "$ENGINE_RAKEFILE" ]; then
+  rm "$ENGINE_RAKEFILE"
+fi
+
+# Remove config/routes.rb from the engine
+ENGINE_ROUTES_FILE="engines/$ENGINE_NAME/config/routes.rb"
+if [ -f "$ENGINE_ROUTES_FILE" ]; then
+  rm "$ENGINE_ROUTES_FILE"
+fi
+
+# Remove test directory and set up RSpec
+ENGINE_TEST_DIR="engines/$ENGINE_NAME/test"
+if [ -d "$ENGINE_TEST_DIR" ]; then
+  rm -rf "$ENGINE_TEST_DIR"
+fi
+
+# Remove the engine's config directory
+ENGINE_CONFIG_DIR="engines/$ENGINE_NAME/config"
+if [ -d "$ENGINE_CONFIG_DIR" ]; then
+  rm -rf "$ENGINE_CONFIG_DIR"
+fi
+
+# Remove the engine's .github directory
+ENGINE_GITHUB_DIR="engines/$ENGINE_NAME/.github"
+if [ -d "$ENGINE_GITHUB_DIR" ]; then
+  rm -rf "$ENGINE_GITHUB_DIR"
+fi
+
+# Remove the engine's .rubocop.yml file
+ENGINE_RUBOCOP_FILE="engines/$ENGINE_NAME/.rubocop.yml"
+if [ -f "$ENGINE_RUBOCOP_FILE" ]; then
+  rm "$ENGINE_RUBOCOP_FILE"
+fi
+
+cd engines/$ENGINE_NAME
+bundle add rspec --group="development, test"
+bundle exec rspec --init
+cd - > /dev/null

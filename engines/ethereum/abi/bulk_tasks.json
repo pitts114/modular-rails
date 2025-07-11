@@ -1,0 +1,237 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "basetoken_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "engine_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "basetoken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "commitments_",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "bulkSignalCommitment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_taskids",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "claimSolutions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "engine",
+    "outputs": [
+      {
+        "internalType": "contract IArbiusEngine",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "taskIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getBulkCombinedTaskInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "taskId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "solutionValidator",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "solutionBlocktime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "solutionClaimed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "solutionExists",
+            "type": "bool"
+          },
+          {
+            "internalType": "address",
+            "name": "contestationValidator",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "contestationBlocktime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "contestationFinishStartIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "contestationSlashAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "contestationExists",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct BulkTasks.TaskSolutionWithContestationInfo[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "taskids_",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getBulkContestations",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "validator",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "blocktime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "finish_start_index",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "slashAmount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IArbiusEngine.EngineContestation[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "commitments_",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getCommitments",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "taskids_",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getSolutions",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "validator",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "blocktime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "claimed",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct IArbiusEngine.EngineSolution[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
