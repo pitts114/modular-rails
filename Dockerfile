@@ -2,8 +2,8 @@
 # check=error=true
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
-# docker build -t arbius_command_center .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name arbius_command_center arbius_command_center
+# docker build -t rails_kafka .
+# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name rails_kafka rails_kafka
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
@@ -16,7 +16,7 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client redis-tools && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
@@ -30,23 +30,30 @@ FROM base AS build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config autoconf automake libtool libssl-dev && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install application gems
+# Copy Gemfile and lockfile
 COPY Gemfile Gemfile.lock ./
+# Copy only gemspecs for engines and local gems before bundle install (for better cache efficiency)
+COPY engines/*/*.gemspec ./engines/
+COPY gems/*/*.gemspec ./gems/
+# Copy engines and local gems after bundle install
+COPY engines ./engines
+COPY gems ./gems
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
-# Copy application code
+# Copy the rest of the application code
 COPY . .
 
 # Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
+# RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+# RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 
 

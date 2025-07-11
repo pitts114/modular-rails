@@ -18,20 +18,22 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  query_cache: false
 
 
 development:
   <<: *default
-  database: arbius_command_center_development
-  username: postgres
-  password: postgres
-  host: localhost
+  database: rails_kafka_development
+  username: <%= ENV['RAILS_KAFKA_DATABASE_USERNAME'] %>
+  password: <%= ENV['RAILS_KAFKA_DATABASE_PASSWORD'] %>
+  host: <%= ENV['RAILS_KAFKA_DATABASE_HOST'] %>
+  port: <%= ENV['RAILS_KAFKA_DATABASE_PORT'] %>
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
   # When left blank, PostgreSQL will use the default role. This is
   # the same name as the operating system user running Rails.
-  #username: arbius_command_center
+  #username: rails_kafka
 
   # The password associated with the PostgreSQL role (username).
   #password:
@@ -59,7 +61,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: arbius_command_center_test
+  database: rails_kafka_test
   username: postgres
   password: postgres
   host: localhost
@@ -87,18 +89,20 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: arbius_command_center_production
-    username: arbius_command_center
-    password: <%= ENV["ARBIUS_COMMAND_CENTER_DATABASE_PASSWORD"] %>
+    database: rails_kafka_production
+    username: <%= ENV["RAILS_KAFKA_DATABASE_USERNAME"] %>
+    password: <%= ENV["RAILS_KAFKA_DATABASE_PASSWORD"] %>
+    host: <%= ENV["RAILS_KAFKA_DATABASE_HOST"] %>
+    port: <%= ENV["RAILS_KAFKA_DATABASE_PORT"] %>
   cache:
     <<: *primary_production
-    database: arbius_command_center_production_cache
+    database: rails_kafka_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: arbius_command_center_production_queue
+    database: rails_kafka_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: arbius_command_center_production_cable
+    database: rails_kafka_production_cable
     migrations_paths: db/cable_migrate

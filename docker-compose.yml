@@ -1,11 +1,10 @@
-version: '3.8'
 services:
   db:
     image: postgres:17.5
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: arbius_command_center_development
+      POSTGRES_DB: rails_kafka_development
     ports:
       - '5432:5432'
     volumes:
