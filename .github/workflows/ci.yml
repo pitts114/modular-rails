@@ -141,7 +141,7 @@ jobs:
           DATABASE_PASSWORD: postgres
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DATABASE_NAME: rails_kafka_test
+          DATABASE_NAME: modular_rails_test
         run: |
           bin/rails db:schema:load
           bin/rails db:test:prepare
