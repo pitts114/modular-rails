@@ -42,7 +42,7 @@ gem "thruster", require: false
 
 gem "redis"
 
-gem "sinatra", "~> 2.2"
+gem "sinatra", "~> 4.1"
 
 gem "sentry-ruby"
 gem "sentry-rails"
