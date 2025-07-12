@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Rails template for generating a mountable engine without isolated namespace
-# Usage: rails app:template LOCATION=lib/templates/engine_no_namespace.rb
+# Rails template for generating a mountable engine
+# Usage: rails app:template LOCATION=lib/templates/engine.rb
 
 require "fileutils"
 require "pathname"
