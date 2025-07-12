@@ -17,6 +17,7 @@ class EngineGenerator
 
     create_plugin
     cleanup_generated_files
+    setup_gemspec
     setup_spec_helpers
     setup_rubocop
     setup_rakefile
@@ -44,6 +45,10 @@ class EngineGenerator
 
   def cleanup_generated_files
     FileCleanup.new(engine_path, engine_name, root_path).perform
+  end
+
+  def setup_gemspec
+    GemspecSetup.new(engine_path, engine_name).perform
   end
 
   def setup_spec_helpers
