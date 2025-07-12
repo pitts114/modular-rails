@@ -82,41 +82,4 @@ end
 gem "resque"
 
 # Scan for engine dependencies
-# This section scans the engines directory for gemspec files and adds them to the Gemfile.
-# It also handles circular dependencies by maintaining a stack of currently scanned engines.
-require "rubygems"
-require "set"
-engine_dependencies = Set.new
-circular_stack = []
-
-def scan_for_engine_dependencies(engine, engine_dependencies = Set.new, circular_stack = [])
-  path = File.expand_path("engines/", __dir__)
-  engine_path = File.join(path, engine)
-  return unless File.directory?(engine_path)
-  if circular_stack.include?(engine)
-    raise "Circular dependency detected: #{(circular_stack + [ engine ]).join(' -> ')}"
-  end
-  return if engine_dependencies.include?(engine)
-  engine_dependencies << engine
-  circular_stack.push(engine)
-  gemspec_file = File.join(engine_path, "#{engine}.gemspec")
-  if File.exist?(gemspec_file)
-    spec = Gem::Specification.load(gemspec_file)
-    spec.dependencies.each do |dep|
-      scan_for_engine_dependencies(dep.name, engine_dependencies, circular_stack)
-    end
-  end
-  circular_stack.pop
-end
-
-# Scan all engines and add them and their dependencies to the global group
-Dir.glob(File.expand_path("engines/*", __dir__)).each do |path|
-  engine = File.basename(path)
-  gemspec_file = File.join(path, "#{engine}.gemspec")
-  next unless File.exist?(gemspec_file)
-  scan_for_engine_dependencies(engine, engine_dependencies, circular_stack)
-end
-
-engine_dependencies.each do |engine|
-  gem engine, path: "engines/#{engine}", require: true
-end
+require File.expand_path("lib/engine_scanner.rb", __dir__)
