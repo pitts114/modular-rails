@@ -81,5 +81,35 @@ end
 
 gem "resque"
 
-# Scan for engine dependencies
-require File.expand_path("lib/engine_scanner.rb", __dir__)
+require "set"
+engine_dependencies = Set.new
+circular_stack = []
+
+def scan_for_engine_dependencies(engine, engine_dependencies = Set.new, circular_stack = [])
+  path = File.expand_path("engines/", __dir__)
+  engine_path = File.join(path, engine)
+  return unless File.directory?(engine_path)
+  if circular_stack.include?(engine)
+    raise "Circular dependency detected: #{(circular_stack + [ engine ]).join(' -> ')}"
+  end
+  return if engine_dependencies.include?(engine)
+  engine_dependencies << engine
+  circular_stack.push(engine)
+  gemspec_file = File.join(engine_path, "#{engine}.gemspec")
+  if File.exist?(gemspec_file)
+    spec = Gem::Specification.load(gemspec_file)
+    spec.dependencies.each do |dep|
+      scan_for_engine_dependencies(dep.name, engine_dependencies, circular_stack)
+    end
+  end
+  circular_stack.pop
+end
+
+Dir.glob(File.expand_path("engines/*", __dir__)).each do |path|
+  engine = File.basename(path)
+  scan_for_engine_dependencies(engine, engine_dependencies, circular_stack)
+end
+
+engine_dependencies.each do |engine|
+  gem engine, path: "engines/#{engine}", require: true
+end
