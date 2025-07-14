@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contact Preferences</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+      .container { background: #f9f9f9; padding: 30px; border-radius: 8px; }
+      .form-group { margin-bottom: 20px; }
+      label { display: block; font-weight: bold; margin-bottom: 5px; }
+      input[type="email"], input[type="tel"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+      .checkbox-group { display: flex; align-items: center; gap: 10px; }
+      .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+      .btn-primary { background: #007bff; color: white; }
+      .btn-secondary { background: #6c757d; color: white; }
+      .alert { padding: 10px; border-radius: 4px; margin-bottom: 20px; }
+      .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+      .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+      .navigation { margin-bottom: 20px; }
+      .navigation a { margin-right: 10px; }
+      .preference-section { background: white; padding: 20px; border-radius: 4px; margin-bottom: 20px; }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="navigation">
+        <%= link_to "Profile", profile_users_path, class: "btn btn-secondary" %>
+        <%= link_to "Edit Contact Preferences", edit_contact_preferences_path, class: "btn btn-primary" %>
+      </div>
+
+      <h1>Contact Preferences</h1>
+
+      <% if flash[:notice] %>
+        <div class="alert alert-success"><%= flash[:notice] %></div>
+      <% end %>
+
+      <% if flash[:alert] %>
+        <div class="alert alert-danger"><%= flash[:alert] %></div>
+      <% end %>
+
+      <% if @errors&.any? %>
+        <div class="alert alert-danger">
+          <ul>
+            <% @errors.each do |error| %>
+              <li><%= error %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if @contact_preference %>
+        <div class="preference-section">
+          <h3>Contact Information</h3>
+          <p><strong>Email:</strong> <%= @contact_preference.email %></p>
+          <p><strong>Phone Number:</strong> <%= @contact_preference.phone_number.present? ? @contact_preference.phone_number : 'Not provided' %></p>
+        </div>
+
+        <div class="preference-section">
+          <h3>Notification Preferences</h3>
+          <p><strong>Email Notifications:</strong> <%= @contact_preference.email_notifications_enabled? ? 'Enabled' : 'Disabled' %></p>
+          <p><strong>Phone Notifications:</strong> <%= @contact_preference.phone_notifications_enabled? ? 'Enabled' : 'Disabled' %></p>
+        </div>
+
+        <p>
+          <%= link_to "Edit Preferences", edit_contact_preferences_path, class: "btn btn-primary" %>
+        </p>
+      <% else %>
+        <div class="alert alert-danger">
+          <p>No contact preferences found. This should have been created when your account was set up.</p>
+        </div>
+      <% end %>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,116 @@
+<div class="login-container">
+  <h1>Sign In</h1>
+
+  <% if @errors&.any? %>
+    <div class="error-messages">
+      <h3>Please fix the following errors:</h3>
+      <ul>
+        <% @errors.each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with url: authenticate_users_path, scope: :user, local: true do |form| %>
+    <div class="form-group">
+      <%= form.label :username %>
+      <%= form.text_field :username, required: true, class: "form-control" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :password %>
+      <%= form.password_field :password, required: true, class: "form-control" %>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit "Sign In", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+
+  <div class="form-links">
+    <p>Don't have an account? <%= link_to "Sign up here", root_path %></p>
+  </div>
+</div>
+
+<style>
+  .login-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .error-messages {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .error-messages ul {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.5rem;
+  }
+
+  .form-links {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+  }
+
+  .form-links a {
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  .form-links a:hover {
+    text-decoration: underline;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: bold;
+  }
+
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2rem;
+  }
+</style>
