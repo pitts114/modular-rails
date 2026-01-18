@@ -11,16 +11,12 @@ class NotificationsApi
     @logger = logger
   end
 
-  # Creates a new contact preference
+  # Creates a new contact preference with default notification settings
   # @param user_id [String] the user ID
-  # @param email [String] the email address
-  # @param phone_number [String, nil] optional phone number
   # @return [Hash] result with success status, contact preference, and any errors
-  def create_contact_preference(user_id:, email:, phone_number: nil)
+  def create_contact_preference(user_id:)
     contact_preference, errors = @user_contact_preference_creation_service.call(
-      user_id: user_id,
-      email: email,
-      phone_number: phone_number
+      user_id: user_id
     )
 
     if contact_preference
@@ -47,18 +43,14 @@ class NotificationsApi
     handle_standard_error(e, contact_preference: nil)
   end
 
-  # Updates a contact preference
+  # Updates notification preferences
   # @param user_id [String] the user ID
-  # @param email [String, nil] new email address
-  # @param phone_number [String, nil] new phone number
   # @param email_notifications_enabled [Boolean, nil] email notification preference
   # @param phone_notifications_enabled [Boolean, nil] phone notification preference
   # @return [Hash] result with success status, contact preference, and any errors
-  def update_contact_preference(user_id:, email: nil, phone_number: nil, email_notifications_enabled: nil, phone_notifications_enabled: nil)
+  def update_contact_preference(user_id:, email_notifications_enabled: nil, phone_notifications_enabled: nil)
     contact_preference, errors = @user_contact_preference_update_service.call(
       user_id: user_id,
-      email: email,
-      phone_number: phone_number,
       email_notifications_enabled: email_notifications_enabled,
       phone_notifications_enabled: phone_notifications_enabled
     )

@@ -10,9 +10,7 @@ class UserCreatedEventSubscriber
     @logger.info "UserCreatedEventSubscriber: Processing user created event for user #{payload[:user_id]}"
 
     result = @notifications_api.create_contact_preference(
-      user_id: payload[:user_id],
-      email: payload[:email],
-      phone_number: payload[:phone_number]
+      user_id: payload[:user_id]
     )
 
     if result[:success]

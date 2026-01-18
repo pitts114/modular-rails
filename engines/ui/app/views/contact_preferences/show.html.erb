@@ -49,11 +49,11 @@
         </div>
       <% end %>
 
-      <% if @contact_preference %>
+      <% if @profile && @contact_preference %>
         <div class="preference-section">
           <h3>Contact Information</h3>
-          <p><strong>Email:</strong> <%= @contact_preference.email %></p>
-          <p><strong>Phone Number:</strong> <%= @contact_preference.phone_number.present? ? @contact_preference.phone_number : 'Not provided' %></p>
+          <p><strong>Email:</strong> <%= @profile.email %></p>
+          <p><strong>Phone Number:</strong> <%= @profile.phone_number.present? ? @profile.phone_number : 'Not provided' %></p>
         </div>
 
         <div class="preference-section">

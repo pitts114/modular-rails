@@ -3,11 +3,12 @@
 # Public API for the Users engine
 # This class provides a clean interface for other engines to interact with user functionality
 class UsersApi
-  def initialize(user_creation_service: UserCreationService.new, user_model: User, user_authentication_service: UserAuthenticationService.new, user_profile_service: UserProfileService.new)
+  def initialize(user_creation_service: UserCreationService.new, user_model: User, user_authentication_service: UserAuthenticationService.new, user_profile_service: UserProfileService.new, user_profile_update_service: UserProfileUpdateService.new)
     @user_creation_service = user_creation_service
     @user_model = user_model
     @user_authentication_service = user_authentication_service
     @user_profile_service = user_profile_service
+    @user_profile_update_service = user_profile_update_service
   end
 
   # Creates a new user with signup information
@@ -72,6 +73,23 @@ class UsersApi
     end
   rescue StandardError => e
     handle_standard_error(e, profile: nil)
+  end
+
+  # Updates user profile information
+  # @param user_id [String] the user ID
+  # @param email [String, nil] new email address
+  # @param phone_number [String, nil] new phone number
+  # @return [Hash] result with success status, user object, and any errors
+  def update_user_profile(user_id:, email: nil, phone_number: nil)
+    user, errors = @user_profile_update_service.call(user_id: user_id, email: email, phone_number: phone_number)
+
+    if user && errors.empty?
+      { success: true, user: user, errors: [] }
+    else
+      { success: false, user: nil, errors: errors }
+    end
+  rescue StandardError => e
+    handle_standard_error(e, user: nil)
   end
 
   private
