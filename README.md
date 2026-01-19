@@ -150,7 +150,8 @@ Here's what happens when a user signs up, demonstrating the complete inter-engin
 
 5. **Event Handling** - The [`UserCreatedEventSubscriber`](engines/notifications/app/services/user_created_event_subscriber.rb) in the Notifications engine automatically:
    - Listens for the `users.user_created` event
-   - Creates initial [`UserContactPreference`](engines/notifications/app/models/user_contact_preference.rb) settings
+   - Creates initial [`UserContactPreference`](engines/notifications/app/models/user_contact_preference.rb) with default notification settings (email and phone notifications enabled)
+   - Fetches the user's email from the Users engine via [`UsersApi`](engines/users/app/services/users_api.rb)
    - Sends a welcome email via [`MockEmailService`](engines/notifications/app/services/mock_email_service.rb)
 
 6. **Response** - The [`UsersApi`](engines/users/app/services/users_api.rb) returns a structured response to the controller with success status and any errors
@@ -376,9 +377,9 @@ docker compose down
 
 ### Usage Flow
 1. **Sign Up** - Create a new user account at `/`
-2. **Automatic Setup** - Contact preferences created automatically via events
+2. **Automatic Setup** - Notification preferences created automatically via events
 3. **Profile Management** - View profile at `/users/profile` with flash messages
-4. **Contact Preferences** - Manage notifications at `/contact_preferences`
+4. **Contact Preferences** - Edit contact info (email, phone) and notification settings at `/contact_preferences`
 5. **Email Simulation** - Check logs for mock email activity
 
 ## 📁 Project Structure
@@ -409,6 +410,7 @@ docker compose down
 - Isolated concerns reduce complexity
 - Dependency injection enables easy testing
 - Event-driven design prevents tight coupling
+- Single source of truth for data (no duplication across engines)
 
 ### ✅ **Testability**
 - Comprehensive test coverage
