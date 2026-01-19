@@ -18,6 +18,8 @@ class UserContactPreferenceUpdateService
       phone_notifications_enabled: phone_notifications_enabled
     )
 
+    return [ contact_preference, [] ] if update_attributes.empty?
+
     update_contact_preference(contact_preference: contact_preference, update_attributes: update_attributes)
   end
 

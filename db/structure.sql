@@ -56,8 +56,6 @@ CREATE TABLE public.schema_migrations (
 CREATE TABLE public.user_contact_preferences (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
-    email character varying,
-    phone_number character varying,
     email_notifications_enabled boolean DEFAULT true,
     phone_notifications_enabled boolean DEFAULT true,
     created_at timestamp(6) without time zone NOT NULL,
@@ -183,6 +181,7 @@ ALTER TABLE ONLY public.user_signup_infos
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260118204754'),
 ('20250714004130'),
 ('20250713002338'),
 ('20250712235617'),

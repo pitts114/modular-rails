@@ -1,16 +1,22 @@
 require 'rails_helper'
 
 RSpec.describe "contact_preferences/edit", type: :view do
+  let(:profile) do
+    double(:profile,
+      email: 'test@example.com',
+      phone_number: '+1234567890'
+    )
+  end
+
   let(:contact_preference) do
     double(:contact_preference,
-      email: 'test@example.com',
-      phone_number: '+1234567890',
       email_notifications_enabled: true,
       phone_notifications_enabled: false
     )
   end
 
   before do
+    assign(:profile, profile)
     assign(:contact_preference, contact_preference)
     assign(:errors, nil)
   end
@@ -83,11 +89,16 @@ RSpec.describe "contact_preferences/edit", type: :view do
     expect(rendered).to have_link('Profile', href: profile_users_path)
   end
 
-  context 'when contact preference has blank phone number' do
+  context 'when profile has blank phone number' do
+    let(:profile) do
+      double(:profile,
+        email: 'test@example.com',
+        phone_number: ''
+      )
+    end
+
     let(:contact_preference) do
       double(:contact_preference,
-        email: 'test@example.com',
-        phone_number: '',
         email_notifications_enabled: true,
         phone_notifications_enabled: true
       )
@@ -100,11 +111,16 @@ RSpec.describe "contact_preferences/edit", type: :view do
     end
   end
 
-  context 'when contact preference has nil phone number' do
+  context 'when profile has nil phone number' do
+    let(:profile) do
+      double(:profile,
+        email: 'test@example.com',
+        phone_number: nil
+      )
+    end
+
     let(:contact_preference) do
       double(:contact_preference,
-        email: 'test@example.com',
-        phone_number: nil,
         email_notifications_enabled: true,
         phone_notifications_enabled: true
       )
@@ -134,12 +150,13 @@ RSpec.describe "contact_preferences/edit", type: :view do
     end
   end
 
-  context 'when contact preference is nil' do
+  context 'when profile and contact preference are nil' do
     before do
+      assign(:profile, nil)
       assign(:contact_preference, nil)
     end
 
-    it 'handles nil contact preference gracefully' do
+    it 'handles nil gracefully' do
       render
 
       expect(rendered).to have_field('contact_preference[email]')
@@ -147,7 +164,7 @@ RSpec.describe "contact_preferences/edit", type: :view do
       expect(rendered).to have_field('contact_preference[email_notifications_enabled]', checked: false)
       expect(rendered).to have_field('contact_preference[phone_notifications_enabled]', checked: false)
 
-      # Check that the form fields exist even with nil contact preference
+      # Check that the form fields exist even with nil values
       expect(rendered).to have_css('input[name="contact_preference[email]"]')
       expect(rendered).to have_css('input[name="contact_preference[phone_number]"]')
     end

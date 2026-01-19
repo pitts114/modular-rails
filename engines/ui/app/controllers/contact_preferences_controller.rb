@@ -83,9 +83,9 @@ class ContactPreferencesController < ApplicationController
 
   def contact_preference_params
     params.require(:contact_preference).permit(
-      :email, 
-      :phone_number, 
-      :email_notifications_enabled, 
+      :email,
+      :phone_number,
+      :email_notifications_enabled,
       :phone_notifications_enabled
     )
   end

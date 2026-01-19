@@ -61,9 +61,7 @@ RSpec.describe UserCreatedEventSubscriber do
         subscriber.call(mock_event)
 
         expect(notifications_api).to have_received(:create_contact_preference).with(
-          user_id: 'user123',
-          email: 'test@example.com',
-          phone_number: '+1234567890'
+          user_id: 'user123'
         )
       end
 
@@ -87,13 +85,11 @@ RSpec.describe UserCreatedEventSubscriber do
         subscriber.call(mock_event)
 
         expect(notifications_api).to have_received(:create_contact_preference).with(
-          user_id: 'user123',
-          email: 'test@example.com',
-          phone_number: '+1234567890'
+          user_id: 'user123'
         )
       end
 
-      context 'when phone number is nil' do
+      context 'when phone number is nil in payload' do
         let(:mock_event_no_phone) do
           double(:event, payload: {
             user_id: 'user123',
@@ -104,13 +100,11 @@ RSpec.describe UserCreatedEventSubscriber do
           })
         end
 
-        it 'handles nil phone number correctly' do
+        it 'still only passes user_id to create_contact_preference' do
           subscriber.call(mock_event_no_phone)
 
           expect(notifications_api).to have_received(:create_contact_preference).with(
-            user_id: 'user123',
-            email: 'test@example.com',
-            phone_number: nil
+            user_id: 'user123'
           )
         end
       end
@@ -125,13 +119,11 @@ RSpec.describe UserCreatedEventSubscriber do
           })
         end
 
-        it 'handles missing phone number correctly' do
+        it 'still only passes user_id to create_contact_preference' do
           subscriber.call(mock_event_missing_phone)
 
           expect(notifications_api).to have_received(:create_contact_preference).with(
-            user_id: 'user123',
-            email: 'test@example.com',
-            phone_number: nil
+            user_id: 'user123'
           )
         end
       end
@@ -142,7 +134,7 @@ RSpec.describe UserCreatedEventSubscriber do
         {
           success: false,
           contact_preference: nil,
-          errors: [ 'Email has already been taken', 'Phone number is invalid' ]
+          errors: [ 'User must exist' ]
         }
       end
 
@@ -164,7 +156,7 @@ RSpec.describe UserCreatedEventSubscriber do
         subscriber.call(mock_event)
 
         expect(logger).to have_received(:error).with(
-          'UserCreatedEventSubscriber: Failed to create contact preferences for user user123: ["Email has already been taken", "Phone number is invalid"]'
+          'UserCreatedEventSubscriber: Failed to create contact preferences for user user123: ["User must exist"]'
         )
       end
 
@@ -248,9 +240,7 @@ RSpec.describe UserCreatedEventSubscriber do
         subscriber.call(minimal_event)
 
         expect(notifications_api).to have_received(:create_contact_preference).with(
-          user_id: 'user456',
-          email: 'minimal@example.com',
-          phone_number: nil
+          user_id: 'user456'
         )
       end
 
@@ -271,9 +261,7 @@ RSpec.describe UserCreatedEventSubscriber do
         subscriber.call(extended_event)
 
         expect(notifications_api).to have_received(:create_contact_preference).with(
-          user_id: 'user789',
-          email: 'extended@example.com',
-          phone_number: '+9876543210'
+          user_id: 'user789'
         )
       end
 
@@ -286,9 +274,7 @@ RSpec.describe UserCreatedEventSubscriber do
         subscriber.call(empty_event)
 
         expect(notifications_api).to have_received(:create_contact_preference).with(
-          user_id: nil,
-          email: nil,
-          phone_number: nil
+          user_id: nil
         )
       end
     end
@@ -326,7 +312,7 @@ RSpec.describe UserCreatedEventSubscriber do
   end
 
   describe 'integration with notifications API' do
-    it 'passes through all required parameters correctly' do
+    it 'passes through only user_id correctly' do
       api_spy = spy(:notifications_api)
       allow(api_spy).to receive(:create_contact_preference).and_return({
         success: true,
@@ -340,16 +326,14 @@ RSpec.describe UserCreatedEventSubscriber do
       subscriber_with_spy.call(mock_event)
 
       expect(api_spy).to have_received(:create_contact_preference).with(
-        user_id: 'user123',
-        email: 'test@example.com',
-        phone_number: '+1234567890'
+        user_id: 'user123'
       ).once
     end
 
     it 'handles API response structure correctly' do
       allow(notifications_api).to receive(:create_contact_preference).and_return({
         success: true,
-        contact_preference: double(:contact_preference, id: 'pref456', email: 'test@example.com'),
+        contact_preference: double(:contact_preference, id: 'pref456'),
         errors: [],
         extra_field: 'ignored'
       })

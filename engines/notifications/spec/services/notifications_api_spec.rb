@@ -16,21 +16,15 @@ RSpec.describe NotificationsApi do
 
   describe '#create_contact_preference' do
     let(:user_id) { SecureRandom.uuid }
-    let(:email) { 'test@example.com' }
-    let(:phone_number) { '+1234567890' }
 
     it 'delegates to the creation service' do
       contact_preference = double(:contact_preference)
 
       expect(user_contact_preference_creation_service).to receive(:call)
-        .with(user_id: user_id, email: email, phone_number: phone_number)
+        .with(user_id: user_id)
         .and_return([ contact_preference, [] ])
 
-      result = api.create_contact_preference(
-        user_id: user_id,
-        email: email,
-        phone_number: phone_number
-      )
+      result = api.create_contact_preference(user_id: user_id)
 
       expect(result).to eq({
         success: true,
@@ -40,17 +34,13 @@ RSpec.describe NotificationsApi do
     end
 
     it 'handles service returning errors' do
-      errors = [ 'Email is invalid' ]
+      errors = [ 'User must exist' ]
 
       expect(user_contact_preference_creation_service).to receive(:call)
-        .with(user_id: user_id, email: email, phone_number: phone_number)
+        .with(user_id: user_id)
         .and_return([ nil, errors ])
 
-      result = api.create_contact_preference(
-        user_id: user_id,
-        email: email,
-        phone_number: phone_number
-      )
+      result = api.create_contact_preference(user_id: user_id)
 
       expect(result).to eq({
         success: false,
@@ -63,11 +53,7 @@ RSpec.describe NotificationsApi do
       expect(user_contact_preference_creation_service).to receive(:call)
         .and_raise(StandardError.new('Database connection failed'))
 
-      result = api.create_contact_preference(
-        user_id: user_id,
-        email: email,
-        phone_number: phone_number
-      )
+      result = api.create_contact_preference(user_id: user_id)
 
       expect(result).to eq({
         success: false,
@@ -137,8 +123,6 @@ RSpec.describe NotificationsApi do
     it 'delegates to the update service' do
       update_params = {
         user_id: user_id,
-        email: 'new@example.com',
-        phone_number: '+9876543210',
         email_notifications_enabled: false,
         phone_notifications_enabled: true
       }
@@ -157,19 +141,17 @@ RSpec.describe NotificationsApi do
     end
 
     it 'handles service returning errors' do
-      error_messages = [ 'Email is invalid', 'Phone number is invalid' ]
+      error_messages = [ 'Contact preference not found' ]
 
       expect(user_contact_preference_update_service).to receive(:call)
         .with(
           user_id: user_id,
-          email: 'invalid-email',
-          phone_number: nil,
-          email_notifications_enabled: nil,
+          email_notifications_enabled: false,
           phone_notifications_enabled: nil
         )
         .and_return([ nil, error_messages ])
 
-      result = api.update_contact_preference(user_id: user_id, email: 'invalid-email')
+      result = api.update_contact_preference(user_id: user_id, email_notifications_enabled: false)
 
       expect(result).to eq({
         success: false,
@@ -184,14 +166,12 @@ RSpec.describe NotificationsApi do
       expect(user_contact_preference_update_service).to receive(:call)
         .with(
           user_id: user_id,
-          email: 'new@example.com',
-          phone_number: nil,
-          email_notifications_enabled: nil,
+          email_notifications_enabled: true,
           phone_notifications_enabled: nil
         )
         .and_return([ nil, error_messages ])
 
-      result = api.update_contact_preference(user_id: user_id, email: 'new@example.com')
+      result = api.update_contact_preference(user_id: user_id, email_notifications_enabled: true)
 
       expect(result).to eq({
         success: false,
@@ -204,7 +184,7 @@ RSpec.describe NotificationsApi do
       expect(user_contact_preference_update_service).to receive(:call)
         .and_raise(StandardError.new('Database connection failed'))
 
-      result = api.update_contact_preference(user_id: user_id, email: 'new@example.com')
+      result = api.update_contact_preference(user_id: user_id, email_notifications_enabled: true)
 
       expect(result).to eq({
         success: false,

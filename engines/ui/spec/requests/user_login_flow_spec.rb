@@ -98,12 +98,12 @@ RSpec.describe 'User Login and Profile Flow', type: :request do
   describe 'GET /users/profile' do
     let(:users_api) { double(:users_api) }
     let(:user_profile_data) do
-      {
+      OpenStruct.new(
         username: 'testuser',
         email: 'test@example.com',
         phone_number: '+1234567890',
         created_at: Time.new(2023, 1, 15, 10, 30, 0)
-      }
+      )
     end
 
     before do

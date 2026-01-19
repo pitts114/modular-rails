@@ -2,7 +2,7 @@
   <h1>Your Profile</h1>
 
   <div class="profile-header">
-    <h2>Welcome, <%= @user_data[:username] %>!</h2>
+    <h2>Welcome, <%= @user_data.username %>!</h2>
   </div>
 
   <% if flash[:notice] %>
@@ -23,22 +23,22 @@
 
       <div class="info-item">
         <label>Username:</label>
-        <span><%= @user_data[:username] %></span>
+        <span><%= @user_data.username %></span>
       </div>
 
       <div class="info-item">
         <label>Email:</label>
-        <span><%= @user_data[:email] %></span>
+        <span><%= @user_data.email %></span>
       </div>
 
       <div class="info-item">
         <label>Phone Number:</label>
-        <span><%= @user_data[:phone_number] || "Not provided" %></span>
+        <span><%= @user_data.phone_number || "Not provided" %></span>
       </div>
 
       <div class="info-item">
         <label>Member Since:</label>
-        <span><%= @user_data[:created_at].strftime("%B %d, %Y") %></span>
+        <span><%= @user_data.created_at.strftime("%B %d, %Y") %></span>
       </div>
     </div>
   </div>

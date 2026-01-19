@@ -79,7 +79,7 @@ RSpec.describe UserContactPreferenceCreationService do
     end
 
     context 'when contact preference creation fails' do
-      let(:errors) { double(:errors, full_messages: ['User must exist']) }
+      let(:errors) { double(:errors, full_messages: [ 'User must exist' ]) }
 
       before do
         allow(contact_preference).to receive(:persisted?).and_return(false)
@@ -102,14 +102,14 @@ RSpec.describe UserContactPreferenceCreationService do
         contact_preference_result, errors = service.call(user_id: user_id)
 
         expect(contact_preference_result).to be_nil
-        expect(errors).to eq(['User must exist'])
+        expect(errors).to eq([ 'User must exist' ])
       end
     end
 
     context 'when fetching user profile fails' do
       before do
         allow(contact_preference).to receive(:persisted?).and_return(true)
-        allow(users_api).to receive(:get_user_profile).and_return({ success: false, errors: ['User not found'] })
+        allow(users_api).to receive(:get_user_profile).and_return({ success: false, errors: [ 'User not found' ] })
       end
 
       it 'logs the error' do

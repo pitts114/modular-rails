@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'engine_helpers/plugin_command'
-require_relative 'engine_helpers/file_cleanup'
-require_relative 'engine_helpers/gemspec_setup'
-require_relative 'engine_helpers/spec_helper_setup'
-require_relative 'engine_helpers/rubocop_setup'
-require_relative 'engine_helpers/rakefile_setup'
-require_relative 'engine_helpers/config_cleanup'
+require_relative "engine_helpers/plugin_command"
+require_relative "engine_helpers/file_cleanup"
+require_relative "engine_helpers/gemspec_setup"
+require_relative "engine_helpers/spec_helper_setup"
+require_relative "engine_helpers/rubocop_setup"
+require_relative "engine_helpers/rakefile_setup"
+require_relative "engine_helpers/config_cleanup"
 
 # Main engine generator class
 class EngineGenerator

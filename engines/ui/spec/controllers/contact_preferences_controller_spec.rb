@@ -1,10 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe ContactPreferencesController, type: :controller do
+  let(:users_api) { double(:users_api) }
   let(:notifications_api) { double(:notifications_api) }
   let(:user_id) { SecureRandom.uuid }
 
   before do
+    allow(UsersApi).to receive(:new).and_return(users_api)
     allow(NotificationsApi).to receive(:new).and_return(notifications_api)
     # Mock session for authentication
     allow(controller).to receive(:session).and_return({ user_id: user_id })
@@ -13,20 +15,21 @@ RSpec.describe ContactPreferencesController, type: :controller do
   describe 'GET #show' do
     context 'when user is logged in' do
       context 'when contact preference exists' do
-        it 'assigns contact preference and renders successfully' do
-          contact_preference = double(:contact_preference)
-          api_result = {
-            success: true,
-            contact_preference: contact_preference,
-            errors: []
-          }
+        it 'assigns profile and contact preference and renders successfully' do
+          profile = double(:profile, email: 'test@example.com', phone_number: '+1234567890')
+          contact_preference = double(:contact_preference, email_notifications_enabled: true, phone_notifications_enabled: true)
+
+          expect(users_api).to receive(:get_user_profile)
+            .with(user_id: user_id)
+            .and_return({ success: true, profile: profile, errors: [] })
 
           expect(notifications_api).to receive(:get_contact_preference)
             .with(user_id: user_id)
-            .and_return(api_result)
+            .and_return({ success: true, contact_preference: contact_preference, errors: [] })
 
           get :show
 
+          expect(assigns(:profile)).to eq(profile)
           expect(assigns(:contact_preference)).to eq(contact_preference)
           expect(assigns(:errors)).to be_nil
           expect(response).to have_http_status(:success)
@@ -34,21 +37,21 @@ RSpec.describe ContactPreferencesController, type: :controller do
       end
 
       context 'when contact preference does not exist' do
-        it 'assigns errors and sets contact preference to nil' do
-          api_result = {
-            success: false,
-            contact_preference: nil,
-            errors: ['Contact preference not found']
-          }
+        it 'assigns errors and sets profile and contact preference to nil' do
+          expect(users_api).to receive(:get_user_profile)
+            .with(user_id: user_id)
+            .and_return({ success: false, profile: nil, errors: [ 'User not found' ] })
 
           expect(notifications_api).to receive(:get_contact_preference)
             .with(user_id: user_id)
-            .and_return(api_result)
+            .and_return({ success: false, contact_preference: nil, errors: [ 'Contact preference not found' ] })
 
           get :show
 
+          expect(assigns(:profile)).to be_nil
           expect(assigns(:contact_preference)).to be_nil
-          expect(assigns(:errors)).to eq(['Contact preference not found'])
+          expect(assigns(:errors)).to include('User not found')
+          expect(assigns(:errors)).to include('Contact preference not found')
           expect(response).to have_http_status(:success)
         end
       end
@@ -70,20 +73,21 @@ RSpec.describe ContactPreferencesController, type: :controller do
   describe 'GET #edit' do
     context 'when user is logged in' do
       context 'when contact preference exists' do
-        it 'assigns contact preference and renders edit form' do
-          contact_preference = double(:contact_preference)
-          api_result = {
-            success: true,
-            contact_preference: contact_preference,
-            errors: []
-          }
+        it 'assigns profile and contact preference and renders edit form' do
+          profile = double(:profile, email: 'test@example.com', phone_number: '+1234567890')
+          contact_preference = double(:contact_preference, email_notifications_enabled: true, phone_notifications_enabled: true)
+
+          expect(users_api).to receive(:get_user_profile)
+            .with(user_id: user_id)
+            .and_return({ success: true, profile: profile, errors: [] })
 
           expect(notifications_api).to receive(:get_contact_preference)
             .with(user_id: user_id)
-            .and_return(api_result)
+            .and_return({ success: true, contact_preference: contact_preference, errors: [] })
 
           get :edit
 
+          expect(assigns(:profile)).to eq(profile)
           expect(assigns(:contact_preference)).to eq(contact_preference)
           expect(response).to have_http_status(:success)
         end
@@ -91,15 +95,13 @@ RSpec.describe ContactPreferencesController, type: :controller do
 
       context 'when contact preference does not exist' do
         it 'redirects to show page with alert' do
-          api_result = {
-            success: false,
-            contact_preference: nil,
-            errors: ['Contact preference not found']
-          }
+          expect(users_api).to receive(:get_user_profile)
+            .with(user_id: user_id)
+            .and_return({ success: false, profile: nil, errors: [ 'User not found' ] })
 
           expect(notifications_api).to receive(:get_contact_preference)
             .with(user_id: user_id)
-            .and_return(api_result)
+            .and_return({ success: false, contact_preference: nil, errors: [ 'Contact preference not found' ] })
 
           get :edit
 
@@ -136,22 +138,24 @@ RSpec.describe ContactPreferencesController, type: :controller do
     context 'when user is logged in' do
       context 'when update is successful' do
         it 'redirects to show page with success notice' do
+          user = double(:user)
           contact_preference = double(:contact_preference)
-          api_result = {
-            success: true,
-            contact_preference: contact_preference,
-            errors: []
-          }
+
+          expect(users_api).to receive(:update_user_profile)
+            .with(
+              user_id: user_id,
+              email: 'new@example.com',
+              phone_number: '+1234567890'
+            )
+            .and_return({ success: true, user: user, errors: [] })
 
           expect(notifications_api).to receive(:update_contact_preference)
             .with(
               user_id: user_id,
-              email: 'new@example.com',
-              phone_number: '+1234567890',
               email_notifications_enabled: true,
               phone_notifications_enabled: false
             )
-            .and_return(api_result)
+            .and_return({ success: true, contact_preference: contact_preference, errors: [] })
 
           patch :update, params: update_params
 
@@ -162,20 +166,29 @@ RSpec.describe ContactPreferencesController, type: :controller do
 
       context 'when update fails' do
         it 'renders edit form with errors' do
-          contact_preference = double(:contact_preference)
-          api_result = {
-            success: false,
-            contact_preference: contact_preference,
-            errors: ['Email is invalid']
-          }
+          profile = double(:profile, email: 'test@example.com', phone_number: '+1234567890')
+          contact_preference = double(:contact_preference, email_notifications_enabled: true, phone_notifications_enabled: true)
+
+          expect(users_api).to receive(:update_user_profile)
+            .and_return({ success: false, user: nil, errors: [ 'Email is invalid' ] })
 
           expect(notifications_api).to receive(:update_contact_preference)
-            .and_return(api_result)
+            .and_return({ success: true, contact_preference: contact_preference, errors: [] })
+
+          # Re-fetch for display on failure
+          expect(users_api).to receive(:get_user_profile)
+            .with(user_id: user_id)
+            .and_return({ success: true, profile: profile, errors: [] })
+
+          expect(notifications_api).to receive(:get_contact_preference)
+            .with(user_id: user_id)
+            .and_return({ success: true, contact_preference: contact_preference, errors: [] })
 
           patch :update, params: update_params
 
+          expect(assigns(:profile)).to eq(profile)
           expect(assigns(:contact_preference)).to eq(contact_preference)
-          expect(assigns(:errors)).to eq(['Email is invalid'])
+          expect(assigns(:errors)).to eq([ 'Email is invalid' ])
           expect(response).to have_http_status(:unprocessable_entity)
           expect(response).to render_template(:edit)
         end
@@ -204,15 +217,24 @@ RSpec.describe ContactPreferencesController, type: :controller do
         }
       }
 
-      expect(notifications_api).to receive(:update_contact_preference)
+      user = double(:user)
+      contact_preference = double(:contact_preference)
+
+      expect(users_api).to receive(:update_user_profile)
         .with(
           user_id: user_id,
           email: 'test@example.com',
-          phone_number: nil,
+          phone_number: nil
+        )
+        .and_return({ success: true, user: user, errors: [] })
+
+      expect(notifications_api).to receive(:update_contact_preference)
+        .with(
+          user_id: user_id,
           email_notifications_enabled: true,
           phone_notifications_enabled: false
         )
-        .and_return({ success: true, contact_preference: double(:contact_preference), errors: [] })
+        .and_return({ success: true, contact_preference: contact_preference, errors: [] })
 
       patch :update, params: update_params
     end

@@ -70,7 +70,7 @@ RSpec.describe UserProfileUpdateService do
       end
 
       context 'when update fails' do
-        let(:error_messages) { ['Email is invalid'] }
+        let(:error_messages) { [ 'Email is invalid' ] }
 
         before do
           allow(signup_info).to receive(:update).and_return(false)
@@ -95,7 +95,7 @@ RSpec.describe UserProfileUpdateService do
         user_result, errors = service.call(user_id: 'nonexistent', email: 'new@example.com')
 
         expect(user_result).to be_nil
-        expect(errors).to eq(['User not found'])
+        expect(errors).to eq([ 'User not found' ])
       end
     end
   end

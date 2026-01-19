@@ -4,12 +4,12 @@ require 'rails_helper'
 
 RSpec.describe 'users/profile.html.erb', type: :view do
   let(:user_data) do
-    {
+    OpenStruct.new(
       username: 'testuser',
       email: 'test@example.com',
       phone_number: '+1234567890',
       created_at: Time.new(2023, 1, 15, 10, 30, 0)
-    }
+    )
   end
 
   before do
@@ -123,12 +123,12 @@ RSpec.describe 'users/profile.html.erb', type: :view do
 
   context 'when phone number is not provided' do
     let(:user_data_no_phone) do
-      {
+      OpenStruct.new(
         username: 'testuser',
         email: 'test@example.com',
         phone_number: nil,
         created_at: Time.new(2023, 1, 15, 10, 30, 0)
-      }
+      )
     end
 
     before do

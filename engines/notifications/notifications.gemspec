@@ -3,8 +3,8 @@ require_relative "lib/notifications/version"
 Gem::Specification.new do |spec|
   spec.name        = "notifications"
   spec.version     = Notifications::VERSION
-  spec.authors     = ["Your Name"]
-  spec.email       = ["your.email@example.com"]
+  spec.authors     = [ "Your Name" ]
+  spec.email       = [ "your.email@example.com" ]
   spec.homepage    = "https://example.com"
   spec.summary     = "Notifications engine for modular Rails app"
   spec.description = "Notifications domain module for the application"
@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
   end
 
-  spec.require_paths = ["lib"]
+  spec.require_paths = [ "lib" ]
 
   # Add dependencies for this engine here
   # Example: spec.add_dependency "some_gem", "~> 1.0"
