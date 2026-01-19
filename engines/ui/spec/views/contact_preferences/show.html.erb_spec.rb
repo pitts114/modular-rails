@@ -1,16 +1,22 @@
 require 'rails_helper'
 
 RSpec.describe "contact_preferences/show", type: :view do
+  let(:profile) do
+    double(:profile,
+      email: 'test@example.com',
+      phone_number: '+1234567890'
+    )
+  end
+
   let(:contact_preference) do
     double(:contact_preference,
-      email: 'test@example.com',
-      phone_number: '+1234567890',
       email_notifications_enabled?: true,
       phone_notifications_enabled?: false
     )
   end
 
   before do
+    assign(:profile, profile)
     assign(:contact_preference, contact_preference)
     assign(:errors, nil)
   end
@@ -55,10 +61,15 @@ RSpec.describe "contact_preferences/show", type: :view do
   end
 
   context 'when phone number is not provided' do
+    let(:profile) do
+      double(:profile,
+        email: 'test@example.com',
+        phone_number: nil
+      )
+    end
+
     let(:contact_preference) do
       double(:contact_preference,
-        email: 'test@example.com',
-        phone_number: nil,
         email_notifications_enabled?: true,
         phone_notifications_enabled?: true
       )
@@ -71,8 +82,9 @@ RSpec.describe "contact_preferences/show", type: :view do
     end
   end
 
-  context 'when contact preference is nil' do
+  context 'when profile or contact preference is nil' do
     before do
+      assign(:profile, nil)
       assign(:contact_preference, nil)
       assign(:errors, [ 'Contact preference not found' ])
     end

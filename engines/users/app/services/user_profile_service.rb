@@ -2,22 +2,22 @@
 
 # Service for handling user profile retrieval
 class UserProfileService
-  def initialize(user_model: User)
-    @user_model = user_model
+  def initialize(user_signup_info_model: UserSignupInfo)
+    @user_signup_info_model = user_signup_info_model
   end
 
   # Gets user profile information including signup details
   # @param user_id [String] the user ID
-  # @return [Hash] user profile data or nil if user not found
+  # @return [OpenStruct] user profile data or nil if user not found
   def call(user_id:)
-    user = @user_model.find_by(id: user_id)
-    return nil unless user
+    signup_info = @user_signup_info_model.includes(:user).find_by(user_id: user_id)
+    return nil unless signup_info
 
-    {
-      username: user.username,
-      email: user.email,
-      phone_number: user.phone_number,
-      created_at: user.created_at
-    }
+    OpenStruct.new(
+      username: signup_info.user&.username,
+      email: signup_info.email,
+      phone_number: signup_info.phone_number,
+      created_at: signup_info.user&.created_at
+    )
   end
 end

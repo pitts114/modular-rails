@@ -2,43 +2,65 @@ class ContactPreferencesController < ApplicationController
   before_action :require_login
 
   def show
-    api = NotificationsApi.new
-    result = api.get_contact_preference(user_id: current_user_id)
+    users_api = UsersApi.new
+    notifications_api = NotificationsApi.new
 
-    if result[:success]
-      @contact_preference = result[:contact_preference]
+    profile_result = users_api.get_user_profile(user_id: current_user_id)
+    preferences_result = notifications_api.get_contact_preference(user_id: current_user_id)
+
+    if profile_result[:success] && preferences_result[:success]
+      @profile = profile_result[:profile]
+      @contact_preference = preferences_result[:contact_preference]
     else
+      @profile = nil
       @contact_preference = nil
-      @errors = result[:errors]
+      @errors = (profile_result[:errors] + preferences_result[:errors]).uniq
     end
   end
 
   def edit
-    api = NotificationsApi.new
-    result = api.get_contact_preference(user_id: current_user_id)
+    users_api = UsersApi.new
+    notifications_api = NotificationsApi.new
 
-    if result[:success]
-      @contact_preference = result[:contact_preference]
+    profile_result = users_api.get_user_profile(user_id: current_user_id)
+    preferences_result = notifications_api.get_contact_preference(user_id: current_user_id)
+
+    if profile_result[:success] && preferences_result[:success]
+      @profile = profile_result[:profile]
+      @contact_preference = preferences_result[:contact_preference]
     else
       redirect_to contact_preferences_path, alert: 'Contact preferences not found'
     end
   end
 
   def update
-    api = NotificationsApi.new
-    result = api.update_contact_preference(
+    users_api = UsersApi.new
+    notifications_api = NotificationsApi.new
+    errors = []
+
+    # Update profile information (email, phone) via Users engine
+    profile_result = users_api.update_user_profile(
       user_id: current_user_id,
       email: contact_preference_params[:email],
-      phone_number: contact_preference_params[:phone_number],
+      phone_number: contact_preference_params[:phone_number]
+    )
+    errors.concat(profile_result[:errors]) unless profile_result[:success]
+
+    # Update notification preferences via Notifications engine
+    preferences_result = notifications_api.update_contact_preference(
+      user_id: current_user_id,
       email_notifications_enabled: contact_preference_params[:email_notifications_enabled] == '1',
       phone_notifications_enabled: contact_preference_params[:phone_notifications_enabled] == '1'
     )
+    errors.concat(preferences_result[:errors]) unless preferences_result[:success]
 
-    if result[:success]
+    if errors.empty?
       redirect_to contact_preferences_path, notice: 'Contact preferences updated successfully!'
     else
-      @contact_preference = result[:contact_preference]
-      @errors = result[:errors]
+      # Re-fetch data for display
+      @profile = users_api.get_user_profile(user_id: current_user_id)[:profile]
+      @contact_preference = notifications_api.get_contact_preference(user_id: current_user_id)[:contact_preference]
+      @errors = errors
       render :edit, status: :unprocessable_entity
     end
   end
@@ -61,9 +83,9 @@ class ContactPreferencesController < ApplicationController
 
   def contact_preference_params
     params.require(:contact_preference).permit(
-      :email, 
-      :phone_number, 
-      :email_notifications_enabled, 
+      :email,
+      :phone_number,
+      :email_notifications_enabled,
       :phone_notifications_enabled
     )
   end

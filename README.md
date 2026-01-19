@@ -83,12 +83,12 @@ Dependencies:
 
 ### 🎯 Engine Responsibilities
 
-| Engine                                      | Purpose                                                          | Key Components                                                                                                                                                                                                                                        |
-| ------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[Core](engines/core/)**                   | Foundation layer providing base classes and shared functionality | [`ApplicationController`](engines/core/app/controllers/application_controller.rb), [`ApplicationRecord`](engines/core/app/models/application_record.rb)                                                                                               |
-| **[Users](engines/users/)**                 | User domain logic, authentication, and data management           | [`User`](engines/users/app/models/user.rb), [`UsersApi`](engines/users/app/services/users_api.rb), [`UserCreationService`](engines/users/app/services/user_creation_service.rb)                                                                       |
-| **[Notifications](engines/notifications/)** | Contact preferences, email services, and event handling          | [`UserContactPreference`](engines/notifications/app/models/user_contact_preference.rb), [`NotificationsApi`](engines/notifications/app/services/notifications_api.rb), [`MockEmailService`](engines/notifications/app/services/mock_email_service.rb) |
-| **[UI](engines/ui/)**                       | User interface controllers, views, and forms                     | [`UsersController`](engines/ui/app/controllers/users_controller.rb), [`ContactPreferencesController`](engines/ui/app/controllers/contact_preferences_controller.rb)                                                                                   |
+| Engine                                      | Purpose                                                                              | Key Components                                                                                                                                                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[Core](engines/core/)**                   | Foundation layer providing base classes and shared functionality                     | [`ApplicationController`](engines/core/app/controllers/application_controller.rb), [`ApplicationRecord`](engines/core/app/models/application_record.rb)                                                                                               |
+| **[Users](engines/users/)**                 | User domain logic, authentication, and **profile data** (email, phone) management    | [`User`](engines/users/app/models/user.rb), [`UserSignupInfo`](engines/users/app/models/user_signup_info.rb), [`UsersApi`](engines/users/app/services/users_api.rb), [`UserCreationService`](engines/users/app/services/user_creation_service.rb)     |
+| **[Notifications](engines/notifications/)** | **Notification preferences** (email/phone enabled flags), email services, and events | [`UserContactPreference`](engines/notifications/app/models/user_contact_preference.rb), [`NotificationsApi`](engines/notifications/app/services/notifications_api.rb), [`MockEmailService`](engines/notifications/app/services/mock_email_service.rb) |
+| **[UI](engines/ui/)**                       | User interface controllers, views, and forms                                         | [`UsersController`](engines/ui/app/controllers/users_controller.rb), [`ContactPreferencesController`](engines/ui/app/controllers/contact_preferences_controller.rb)                                                                                   |
 
 ## 🔗 Inter-Engine Communication
 
@@ -160,21 +160,35 @@ Here's what happens when a user signs up, demonstrating the complete inter-engin
 This flow demonstrates the clean separation of concerns: the UI engine handles presentation, the Users engine manages user data, and the Notifications engine handles communication preferences. The automatic creation of contact preferences and welcome email is triggered through events, ensuring the Users engine doesn't need to know about notification concerns.
 
 ### Clean API Boundaries
-Each engine exposes clean APIs with structured responses:
+Each engine exposes clean APIs with structured responses. The **Users engine is the single source of truth** for profile data (email, phone number), while the Notifications engine only manages notification preferences:
 
 ```ruby
-# Users Engine API
+# Users Engine API - owns profile data
 result = UsersApi.new.create_user(
   username: 'john',
   password: 'secret',
-  email: 'john@example.com'
+  email: 'john@example.com',
+  phone_number: '+1234567890'
 )
 # => { success: true, user: <User>, errors: [] }
 
-# Notifications Engine API
-result = NotificationsApi.new.create_contact_preference(
+# Users Engine API - update profile data
+result = UsersApi.new.update_user_profile(
   user_id: user.id,
-  email: 'john@example.com'
+  email: 'newemail@example.com',
+  phone_number: '+9876543210'
+)
+# => { success: true, user: <User>, errors: [] }
+
+# Notifications Engine API - only manages notification preferences
+result = NotificationsApi.new.create_contact_preference(user_id: user.id)
+# => { success: true, contact_preference: <UserContactPreference>, errors: [] }
+
+# Notifications Engine API - update notification settings only
+result = NotificationsApi.new.update_contact_preference(
+  user_id: user.id,
+  email_notifications_enabled: true,
+  phone_notifications_enabled: false
 )
 # => { success: true, contact_preference: <UserContactPreference>, errors: [] }
 ```

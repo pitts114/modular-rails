@@ -23,8 +23,6 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
         let(:update_params) do
           {
             user_id: user_id,
-            email: 'new@example.com',
-            phone_number: '+1234567890',
             email_notifications_enabled: false,
             phone_notifications_enabled: true
           }
@@ -36,8 +34,6 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
 
         it 'updates the contact preference with all provided attributes' do
           expected_attributes = {
-            email: 'new@example.com',
-            phone_number: '+1234567890',
             email_notifications_enabled: false,
             phone_notifications_enabled: true
           }
@@ -48,25 +44,13 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
         end
 
         it 'returns the contact preference with no errors' do
-          contact_preference, errors = service.call(**update_params)
+          result_preference, errors = service.call(**update_params)
 
-          expect(contact_preference).to eq(contact_preference)
+          expect(result_preference).to eq(contact_preference)
           expect(errors).to eq([])
         end
 
         context 'with partial updates' do
-          it 'only updates provided email' do
-            service.call(user_id: user_id, email: 'new@example.com')
-
-            expect(contact_preference).to have_received(:update).with({ email: 'new@example.com' })
-          end
-
-          it 'only updates provided phone number' do
-            service.call(user_id: user_id, phone_number: '+1234567890')
-
-            expect(contact_preference).to have_received(:update).with({ phone_number: '+1234567890' })
-          end
-
           it 'only updates provided email notifications setting' do
             service.call(user_id: user_id, email_notifications_enabled: false)
 
@@ -81,18 +65,6 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
         end
 
         context 'filtering out nil values' do
-          it 'does not include nil email in update attributes' do
-            service.call(user_id: user_id, email: nil, phone_number: '+1234567890')
-
-            expect(contact_preference).to have_received(:update).with({ phone_number: '+1234567890' })
-          end
-
-          it 'does not include nil phone_number in update attributes' do
-            service.call(user_id: user_id, email: 'new@example.com', phone_number: nil)
-
-            expect(contact_preference).to have_received(:update).with({ email: 'new@example.com' })
-          end
-
           it 'includes false values for boolean fields' do
             service.call(user_id: user_id, email_notifications_enabled: false, phone_notifications_enabled: false)
 
@@ -110,12 +82,20 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
               phone_notifications_enabled: true
             })
           end
+
+          it 'excludes nil values' do
+            service.call(user_id: user_id, email_notifications_enabled: true, phone_notifications_enabled: nil)
+
+            expect(contact_preference).to have_received(:update).with({
+              email_notifications_enabled: true
+            })
+          end
         end
       end
 
       context 'when update fails' do
         let(:errors_double) { double(:errors) }
-        let(:error_messages) { [ 'Email is invalid', 'Phone number is invalid' ] }
+        let(:error_messages) { [ 'Validation failed' ] }
 
         before do
           allow(contact_preference).to receive(:update).and_return(false)
@@ -126,12 +106,22 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
         it 'returns nil contact preference with validation errors' do
           contact_preference_result, errors = service.call(
             user_id: user_id,
-            email: 'invalid-email',
-            phone_number: 'invalid-phone'
+            email_notifications_enabled: false
           )
 
           expect(contact_preference_result).to be_nil
           expect(errors).to eq(error_messages)
+        end
+      end
+
+      context 'when no updates provided' do
+        it 'returns contact preference without calling update' do
+          expect(contact_preference).not_to receive(:update)
+
+          result_preference, errors = service.call(user_id: user_id)
+
+          expect(result_preference).to eq(contact_preference)
+          expect(errors).to eq([])
         end
       end
     end
@@ -142,14 +132,14 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
       end
 
       it 'returns nil contact preference with error message' do
-        contact_preference, errors = service.call(user_id: user_id, email: 'new@example.com')
+        result_preference, errors = service.call(user_id: user_id, email_notifications_enabled: true)
 
-        expect(contact_preference).to be_nil
+        expect(result_preference).to be_nil
         expect(errors).to eq([ "Contact preference not found for user #{user_id}" ])
       end
 
       it 'does not attempt to update anything' do
-        service.call(user_id: user_id, email: 'new@example.com')
+        service.call(user_id: user_id, email_notifications_enabled: true)
 
         # No update should be attempted since contact preference doesn't exist
         expect(user_contact_preference_model).to have_received(:find_by).once
@@ -192,15 +182,11 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
     describe '#build_update_attributes' do
       it 'builds attributes hash with all provided values' do
         attributes = service.send(:build_update_attributes,
-          email: 'test@example.com',
-          phone_number: '+1234567890',
           email_notifications_enabled: true,
           phone_notifications_enabled: false
         )
 
         expect(attributes).to eq({
-          email: 'test@example.com',
-          phone_number: '+1234567890',
           email_notifications_enabled: true,
           phone_notifications_enabled: false
         })
@@ -208,22 +194,17 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
 
       it 'excludes nil values' do
         attributes = service.send(:build_update_attributes,
-          email: 'test@example.com',
-          phone_number: nil,
           email_notifications_enabled: true,
           phone_notifications_enabled: nil
         )
 
         expect(attributes).to eq({
-          email: 'test@example.com',
           email_notifications_enabled: true
         })
       end
 
       it 'includes false boolean values' do
         attributes = service.send(:build_update_attributes,
-          email: nil,
-          phone_number: nil,
           email_notifications_enabled: false,
           phone_notifications_enabled: false
         )
@@ -244,7 +225,7 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
         it 'returns contact preference with empty errors' do
           result = service.send(:update_contact_preference,
             contact_preference: contact_preference,
-            update_attributes: { email: 'test@example.com' }
+            update_attributes: { email_notifications_enabled: true }
           )
 
           expect(result).to eq([ contact_preference, [] ])
@@ -253,7 +234,7 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
 
       context 'when update fails' do
         let(:errors_double) { double(:errors) }
-        let(:error_messages) { [ 'Email is invalid' ] }
+        let(:error_messages) { [ 'Validation failed' ] }
 
         before do
           allow(contact_preference).to receive(:update).and_return(false)
@@ -264,7 +245,7 @@ RSpec.describe UserContactPreferenceUpdateService, type: :service do
         it 'returns nil contact preference with error messages' do
           result = service.send(:update_contact_preference,
             contact_preference: contact_preference,
-            update_attributes: { email: 'invalid-email' }
+            update_attributes: { email_notifications_enabled: false }
           )
 
           expect(result).to eq([ nil, error_messages ])

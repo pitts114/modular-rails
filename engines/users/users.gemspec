@@ -3,8 +3,8 @@ require_relative "lib/users/version"
 Gem::Specification.new do |spec|
   spec.name        = "users"
   spec.version     = Users::VERSION
-  spec.authors     = ["Your Name"]
-  spec.email       = ["your.email@example.com"]
+  spec.authors     = [ "Your Name" ]
+  spec.email       = [ "your.email@example.com" ]
   spec.homepage    = "https://example.com"
   spec.summary     = "Users engine for modular Rails app"
   spec.description = "Users domain module for the application"
@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
   end
 
-  spec.require_paths = ["lib"]
+  spec.require_paths = [ "lib" ]
 
   # Add dependencies for this engine here
   spec.add_dependency "core"
